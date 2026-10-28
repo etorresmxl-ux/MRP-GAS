@@ -7,9 +7,6 @@ from servicios import formato
 def mostrar_inventarios():
     st.header("📋 Consulta de Inventarios")
 
-    # Aplicar estilos globales y de colores en encabezados
-    formato.aplicar_estilos_tabla()
-
     # 1. Obtener información de la base de datos
     datos_estaciones = db.obtener_estaciones()
     datos_inventarios = db.obtener_inventarios()
@@ -20,7 +17,7 @@ def mostrar_inventarios():
 
     df_estaciones = pd.DataFrame(datos_estaciones)
 
-    # 2. Filtros principales: Solo Fecha y Plaza
+    # 2. Filtros principales: Fecha y Plaza
     col_fecha, col_plaza = st.columns(2)
 
     with col_fecha:
@@ -31,7 +28,7 @@ def mostrar_inventarios():
         )
 
     with col_plaza:
-        plazas_disponibles = ["Todas"] + sorted(list(df_estaciones["plaza"].dropna().unique()))
+        plazas_disponibles = ["Todas"] + sorted(list(df_estaciones["plaza"].unique()))
         plaza_seleccionada = st.selectbox(
             "Selecciona la plaza:",
             options=plazas_disponibles,
@@ -101,29 +98,22 @@ def mostrar_inventarios():
     df_resultado["Premium"] = df_resultado["Premium"].astype(int)
     df_resultado["Diesel"] = df_resultado["Diesel"].astype(int)
 
-    # 5. Renderizado de la tabla con configuración de columnas y nombres solicitados
+    # Aplicar estilos globales de tabla (centrado y colores de encabezados) desde formato.py
+    formato.aplicar_estilos_tabla()
+
+    # Definir nombres amigables o columnas de texto y generar la configuración de columnas automáticamente
+    columnas_texto = ["id_estacion", "nombre", "plaza"]
+    column_config = formato.generar_column_config(df_resultado, columnas_texto=columnas_texto)
+
+    # Personalizar etiquetas adicionales de encabezado si se requiere
+    column_config["id_estacion"] = st.column_config.TextColumn("ID", width="small")
+    column_config["nombre"] = st.column_config.TextColumn("Estación", width="medium")
+    column_config["plaza"] = st.column_config.TextColumn("Plaza", width="medium")
+
+    # 5. Renderizado de la tabla con configuración unificada
     st.dataframe(
         df_resultado,
         use_container_width=True,
         hide_index=True,
-        column_config={
-            "id_estacion": st.column_config.TextColumn("ID", width="small"),
-            "nombre": st.column_config.TextColumn("Estación", width="medium"),
-            "plaza": st.column_config.TextColumn("Plaza", width="medium"),
-            "Regular": st.column_config.NumberColumn(
-                "Regular",
-                format="%d",
-                help="Volumen Regular en Litros"
-            ),
-            "Premium": st.column_config.NumberColumn(
-                "Premium",
-                format="%d",
-                help="Volumen Premium en Litros"
-            ),
-            "Diesel": st.column_config.NumberColumn(
-                "Diesel",
-                format="%d",
-                help="Volumen Diesel en Litros"
-            ),
-        }
+        column_config=column_config
     )
