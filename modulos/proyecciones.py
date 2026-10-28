@@ -19,7 +19,7 @@ def formatear_fecha_corta(fecha):
 
 def normalizar_dia_semana(valor_dia):
     """
-    Mapea nombres largos, con acentos o abreviaturas de días de la semana a un índice entero (0 = Lunes, 6 = Domingo).
+    Mapea nombres largos, con acentos o capitalizados a un índice entero (0 = Lunes, 6 = Domingo).
     """
     if not isinstance(valor_dia, str):
         return None
@@ -88,7 +88,7 @@ def mostrar_proyecciones():
                 (df_inv["fecha"] == fecha_hoy)
             ]
 
-    # Obtener factores y ventas por día de la semana desde calculos.py
+    # Obtener factores de estacionalidad y venta proyectada desde calculos.py
     try:
         df_factores = calculos.obtener_factores_estacionalidad_dia()
         if not df_factores.empty:
@@ -144,7 +144,7 @@ def mostrar_proyecciones():
             fecha_fmt = formatear_fecha_corta(fecha_dia)
             fechas_cols.append(fecha_fmt)
 
-            # Consultar Venta Estimada real según el día de la semana correspondiente
+            # Consultar Venta Estimada (Venta Proyectada del Día cruzada con estacionalidad)
             venta_estimada_dia = 0.0
             if not df_factores.empty:
                 mask = (
@@ -154,25 +154,26 @@ def mostrar_proyecciones():
                 
                 if "dia_index" in df_factores.columns:
                     match_venta = df_factores[mask & (df_factores["dia_index"] == fecha_dia.weekday())]
-                    if not match_venta.empty:
-                        for col_val in ["venta_proyectada_dia", "vp_dia", "vdp_ponderada", "volumen"]:
-                            if col_val in match_venta.columns:
-                                val = match_venta[col_val].values[0]
-                                if pd.notna(val):
-                                    venta_estimada_dia = float(val)
-                                    break
+                    if not match_venta.empty and "venta_proyectada_dia" in match_venta.columns:
+                        val = match_venta["venta_proyectada_dia"].values[0]
+                        if pd.notna(val):
+                            venta_estimada_dia = float(val)
+                    elif not match_venta.empty and "vdp_ponderada" in match_venta.columns:
+                        val = match_venta["vdp_ponderada"].values[0]
+                        if pd.notna(val):
+                            venta_estimada_dia = float(val)
 
-            # CÁLCULOS PRINCIPALES (Mantenidos como números reales)
+            # CÁLCULOS PRINCIPALES (Numéricos puros)
             inv_inicial = inv_actual
             inv_final = inv_inicial - venta_estimada_dia
             
             # Cálculo D/S
             ds = (inv_final / venta_estimada_dia) if venta_estimada_dia > 0 else 0.0
 
-            inv_iniciales.append(inv_inicial)
-            ventas_est.append(venta_estimada_dia)
-            inv_finales.append(inv_final)
-            dias_inventario.append(ds)
+            inv_iniciales.append(round(inv_inicial, 2))
+            ventas_est.append(round(venta_estimada_dia, 2))
+            inv_finales.append(round(inv_final, 2))
+            dias_inventario.append(round(ds, 1))
 
             # El inventario final del día actual se vuelve el inicial del día siguiente
             inv_actual = inv_final
@@ -191,12 +192,12 @@ def mostrar_proyecciones():
 
         df_proyeccion = pd.DataFrame(data_dict)
 
-        # Configuración de columnas dinámicas distinguiendo enteros (con comas) y decimales (D/S)
+        # Configuración de columnas con NumberColumn para asegurar separador de miles y formato decimal
         column_config = {
             "Concepto": st.column_config.TextColumn("Concepto", width="medium")
         }
         for idx, fecha_fmt in enumerate(fechas_cols):
-            # Identificamos el renglón de D/S para aplicarle formato de 1 decimal, los demás enteros con comas
+            # Fila 3 corresponde a D/S (índice 3), la cual lleva 1 decimal (0.0). Las demás llevan enteros con separador de millares.
             column_config[fecha_fmt] = st.column_config.NumberColumn(
                 fecha_fmt,
                 format="%.1f" if idx == 3 else "%d"
