@@ -94,7 +94,7 @@ def mostrar_proyecciones():
         </style>
     """, unsafe_allow_html=True)
 
-    # 4. Generar tabla de proyecciones por cada producto
+    # 4. Generar tabla horizontal de proyecciones por cada producto
     for producto in productos:
         st.subheader(f"⛽ Producto: {producto}")
 
@@ -105,13 +105,19 @@ def mostrar_proyecciones():
             if not match_prod.empty:
                 inv_inicial_hoy = int(match_prod["volumen"].values[0])
 
-        filas = []
+        fechas_cols = []
+        inv_iniciales = []
+        ventas_est = []
+        inv_finales = []
+        dias_inventario = []
+
         inv_actual = inv_inicial_hoy
 
         # Iterar 14 días (Hoy + 13 días proyectados)
         for i in range(14):
             fecha_dia = fecha_hoy + timedelta(days=i)
             fecha_fmt = formatear_fecha_corta(fecha_dia)
+            fechas_cols.append(fecha_fmt)
 
             # Consultar Venta Estimada (VDP) para este producto y fecha de forma segura
             venta_est = 0
@@ -131,45 +137,42 @@ def mostrar_proyecciones():
             # Cálculo D/S (Días de Inventario según el inventario y la venta del día)
             ds = int(inv_final / venta_est) if venta_est > 0 else 0
 
-            filas.append({
-                "Fecha": fecha_fmt,
-                "Inventario Inicial": int(inv_inicial),
-                "Venta Estimada": int(venta_est),
-                "Inventario Final": int(inv_final),
-                "D/S": int(ds)
-            })
+            inv_iniciales.append(int(inv_inicial))
+            ventas_est.append(int(venta_est))
+            inv_finales.append(int(inv_final))
+            dias_inventario.append(int(ds))
 
             # El inventario final del día actual se vuelve el inicial del día siguiente
             inv_actual = inv_final
 
-        df_proyeccion = pd.DataFrame(filas)
+        # Construir estructura horizontal (Concepto en vertical, fechas en columnas)
+        data_dict = {
+            "Concepto": ["Inventario Inicial", "Venta Estimada", "Inventario Final", "D/S"]
+        }
+        for idx, fecha_fmt in enumerate(fechas_cols):
+            data_dict[fecha_fmt] = [
+                inv_iniciales[idx],
+                ventas_est[idx],
+                inv_finales[idx],
+                dias_inventario[idx]
+            ]
 
-        # Configuración y renderizado del DataFrame con Streamlit
+        df_proyeccion = pd.DataFrame(data_dict)
+
+        # Configuración de columnas dinámicas
+        column_config = {
+            "Concepto": st.column_config.TextColumn("Concepto", width="medium")
+        }
+        for fecha_fmt in fechas_cols:
+            column_config[fecha_fmt] = st.column_config.NumberColumn(
+                fecha_fmt,
+                format="%d"
+            )
+
+        # Renderizado del DataFrame con Streamlit
         st.dataframe(
             df_proyeccion,
             use_container_width=True,
             hide_index=True,
-            column_config={
-                "Fecha": st.column_config.TextColumn("Fecha", help="ddd, - dd-mmm"),
-                "Inventario Inicial": st.column_config.NumberColumn(
-                    "Inventario Inicial",
-                    format="%d",
-                    help="Inventario registrado o proyectado al inicio del día"
-                ),
-                "Venta Estimada": st.column_config.NumberColumn(
-                    "Venta Estimada",
-                    format="%d",
-                    help="Venta proyectada según el día"
-                ),
-                "Inventario Final": st.column_config.NumberColumn(
-                    "Inventario Final",
-                    format="%d",
-                    help="Inicial - Venta Estimada"
-                ),
-                "D/S": st.column_config.NumberColumn(
-                    "D/S",
-                    format="%d",
-                    help="Días de inventario disponibles"
-                ),
-            }
+            column_config=column_config
         )
