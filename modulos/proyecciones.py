@@ -17,6 +17,24 @@ def formatear_fecha_corta(fecha):
     mes_str = meses[fecha.month]
     return f"{dia_str}, - {fecha.day:02d}-{mes_str}"
 
+def normalizar_dia_semana(valor_dia):
+    """
+    Mapea nombres largos, con acentos o abreviaturas de días a un índice entero (0 = Lunes, 6 = Domingo).
+    """
+    if not isinstance(valor_dia, str):
+        return None
+    val = valor_dia.strip().lower()
+    mapa = {
+        'lunes': 0, 'lun': 0,
+        'martes': 1, 'mar': 1,
+        'miércoles': 2, 'miercoles': 2, 'mié': 2, 'mie': 2,
+        'jueves': 3, 'jue': 3,
+        'viernes': 4, 'vie': 4,
+        'sábado': 5, 'sabado': 5, 'sáb': 5, 'sab': 5,
+        'domingo': 6, 'dom': 6
+    }
+    return mapa.get(val, None)
+
 
 def mostrar_proyecciones():
     st.header("📈 Proyección e Integridad de Inventarios (14 Días)")
@@ -73,8 +91,20 @@ def mostrar_proyecciones():
     # Obtener la venta proyectada y factores de estacionalidad desde calculos.py
     try:
         df_factores = calculos.obtener_factores_estacionalidad_dia()
-        if not df_factores.empty and "fecha" in df_factores.columns:
-            df_factores["fecha_dt"] = pd.to_datetime(df_factores["fecha"]).dt.date
+        if not df_factores.empty:
+            # Identificar la columna de día (puede llamarse 'dia', 'dia_semana', etc.)
+            col_dia_encontrada = None
+            for c in ["dia", "dia_semana", "semana_dia"]:
+                if c in df_factores.columns:
+                    col_dia_encontrada = c
+                    break
+            
+            if col_dia_encontrada:
+                df_factores["dia_index"] = df_factores[col_dia_encontrada].apply(normalizar_dia_semana)
+            else:
+                # Si no existe columna de día explícita, intentamos buscar si hay columna fecha
+                if "fecha" in df_factores.columns:
+                    df_factores["fecha_dt"] = pd.to_datetime(df_factores["fecha"]).dt.date
         else:
             df_factores = pd.DataFrame()
     except Exception:
@@ -119,31 +149,39 @@ def mostrar_proyecciones():
             fecha_fmt = formatear_fecha_corta(fecha_dia)
             fechas_cols.append(fecha_fmt)
 
-            # Consultar Venta Estimada (Venta Proyectada del Día) desde calculos.py de forma segura
+            # Consultar Venta Estimada haciendo match por Estación, Producto y Día de la Semana
             venta_est = 0
             if not df_factores.empty:
-                # Intentamos buscar por fecha exacta si la vista la provee
-                if "fecha_dt" in df_factores.columns:
-                    match_venta = df_factores[
-                        (df_factores["id_estacion"] == id_estacion_sel) &
-                        (df_factores["producto"].str.capitalize() == producto) &
-                        (df_factores["fecha_dt"] == fecha_dia)
-                    ]
-                    if not match_venta.empty and "venta_proyectada_dia" in match_venta.columns:
-                        venta_est = int(match_venta["venta_proyectada_dia"].values[0])
+                # Filtrar por estación y producto
+                mask = (
+                    (df_factores["id_estacion"] == id_estacion_sel) &
+                    (df_factores["producto"].str.capitalize() == producto)
+                )
                 
-                # Si no hay coincidencia exacta por fecha pero sí por día de la semana o VDP ponderada general
-                if venta_est == 0 and "vdp_ponderada" in df_factores.columns:
-                    match_vdp = df_factores[
-                        (df_factores["id_estacion"] == id_estacion_sel) &
-                        (df_factores["producto"].str.capitalize() == producto)
-                    ]
-                    if not match_vdp.empty:
-                        # Si cuenta con venta_proyectada_dia general, la tomamos como estimación base
-                        if "venta_proyectada_dia" in match_vdp.columns:
-                            venta_est = int(match_vdp["venta_proyectada_dia"].values[0])
-                        elif "vdp_ponderada" in match_vdp.columns:
-                            venta_est = int(match_vdp["vdp_ponderada"].values[0])
+                # Si tenemos índice de día normalizado, filtramos por el weekday correspondiente (0-6)
+                if "dia_index" in df_factores.columns:
+                    match_venta = df_factores[mask & (df_factores["dia_index"] == fecha_dia.weekday())]
+                elif "fecha_dt" in df_factores.columns:
+                    match_venta = df_factores[mask & (df_factores["fecha_dt"] == fecha_dia)]
+                else:
+                    match_venta = pd.DataFrame()
+
+                if not match_venta.empty:
+                    # Buscar la columna de venta proyectada
+                    for col_val in ["venta_proyectada_dia", "vp_dia", "vdp_ponderada", "volumen"]:
+                        if col_val in match_venta.columns:
+                            val = match_venta[col_val].values[0]
+                            if pd.notna(val):
+                                venta_est = int(val)
+                                break
+                
+                # Fallback general si no encontró por día específico pero existe un VDP ponderado general
+                if venta_est == 0:
+                    match_gen = df_factores[mask]
+                    if not match_gen.empty and "vdp_ponderada" in match_gen.columns:
+                        val_gen = match_gen["vdp_ponderada"].values[0]
+                        if pd.notna(val_gen):
+                            venta_est = int(val_gen)
 
             # CÁLCULOS PRINCIPALES
             inv_inicial = inv_actual
