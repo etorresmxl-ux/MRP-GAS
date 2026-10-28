@@ -44,9 +44,24 @@ def generar_column_config(df, excepciones_decimales=None, columnas_texto=None):
             if col in excepciones_decimales:
                 column_config[col] = st.column_config.NumberColumn(col, format="%.1f")
             else:
-                # Usar formato entero con separador de miles estándar de Streamlit
-                column_config[col] = st.column_config.NumberColumn(col, format="%d")
+                column_config[col] = st.column_config.NumberColumn(col)
         else:
             column_config[col] = st.column_config.TextColumn(col)
 
     return column_config
+
+
+def formatear_dataframe_numero(df, columnas=None):
+    """
+    Devuelve un Styler con miles separados para columnas numéricas.
+    Esto es más fiable que depender solo de NumberColumn en Streamlit.
+    """
+    if columnas is None:
+        columnas = ["Regular", "Premium", "Diesel"]
+
+    columnas = [c for c in columnas if c in df.columns]
+    if not columnas:
+        return df
+
+    styler = df.style.format({col: "{:,.0f}" for col in columnas})
+    return styler

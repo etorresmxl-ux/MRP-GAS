@@ -49,15 +49,10 @@ def mostrar_inventarios():
     # 4. Procesar y filtrar datos de inventario si existen
     if datos_inventarios:
         df_inventarios = pd.DataFrame(datos_inventarios)
-
-        # Asegurar formato correcto de fecha para el filtro
         df_inventarios["fecha"] = pd.to_datetime(df_inventarios["fecha"]).dt.date
-
-        # Filtrar inventarios por fecha
         df_inv_filtrado = df_inventarios[df_inventarios["fecha"] == fecha_seleccionada]
 
         if not df_inv_filtrado.empty:
-            # Pivotar el producto en columnas (Regular, Premium, Diesel)
             df_pivot = df_inv_filtrado.pivot_table(
                 index="id_estacion",
                 columns="producto",
@@ -66,7 +61,6 @@ def mostrar_inventarios():
                 fill_value=0
             ).reset_index()
 
-            # Unir las estaciones filtradas por plaza con el inventario
             df_resultado = pd.merge(
                 df_estaciones_filtradas[["id_estacion", "nombre", "plaza"]],
                 df_pivot,
@@ -74,51 +68,41 @@ def mostrar_inventarios():
                 how="left"
             ).fillna(0)
         else:
-            # Si no hay registros en la fecha seleccionada, mostrar inventarios en 0
             df_resultado = df_estaciones_filtradas[["id_estacion", "nombre", "plaza"]].copy()
             df_resultado["Regular"] = 0
             df_resultado["Premium"] = 0
             df_resultado["Diesel"] = 0
     else:
-        # Si la tabla de inventarios está completamente vacía
         df_resultado = df_estaciones_filtradas[["id_estacion", "nombre", "plaza"]].copy()
         df_resultado["Regular"] = 0
         df_resultado["Premium"] = 0
         df_resultado["Diesel"] = 0
 
-    # Asegurar que existan las columnas de combustible requeridas
     for col in ["Regular", "Premium", "Diesel"]:
         if col not in df_resultado.columns:
             df_resultado[col] = 0
 
-    # Reordenar columnas exactas requeridas
     df_resultado = df_resultado[["id_estacion", "nombre", "plaza", "Regular", "Premium", "Diesel"]]
 
-    # Convertir volúmenes a enteros
     df_resultado["Regular"] = df_resultado["Regular"].astype(int)
     df_resultado["Premium"] = df_resultado["Premium"].astype(int)
     df_resultado["Diesel"] = df_resultado["Diesel"].astype(int)
 
-    # Aplicar estilos globales de tabla (centrado y colores de encabezados) desde formato.py
     formato.aplicar_estilos_tabla()
 
-    # Generar la configuración de columnas automáticamente asegurando formato numérico con separador de miles
     columnas_texto = ["id_estacion", "nombre", "plaza"]
     column_config = formato.generar_column_config(df_resultado, columnas_texto=columnas_texto)
 
-    # Personalizar etiquetas y anchos de columnas de texto
     column_config["id_estacion"] = st.column_config.TextColumn("ID", width="small")
     column_config["nombre"] = st.column_config.TextColumn("Estación", width="medium")
     column_config["plaza"] = st.column_config.TextColumn("Plaza", width="medium")
 
-    # Configuración explícita para asegurar separación de millares en los combustibles
-    column_config["Regular"] = st.column_config.NumberColumn("Regular", format="%.0f")
-    column_config["Premium"] = st.column_config.NumberColumn("Premium", format="%.0f")
-    column_config["Diesel"] = st.column_config.NumberColumn("Diesel", format="%.0f")
+    # En Streamlit, NumberColumn con format no fuerza separador de miles como se espera;
+    # por eso se aplica el formato directamente con Pandas Styler.
+    df_formateado = formato.formatear_dataframe_numero(df_resultado, ["Regular", "Premium", "Diesel"])
 
-    # 5. Renderizado de la tabla con configuración unificada
     st.dataframe(
-        df_resultado,
+        df_formateado,
         use_container_width=True,
         hide_index=True,
         column_config=column_config
