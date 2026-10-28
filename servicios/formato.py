@@ -3,24 +3,33 @@ import pandas as pd
 
 def aplicar_estilos_tabla():
     """
-    Inyecta el CSS global para centrar los títulos y aplicar colores específicos a los encabezados de Regular (verde), Premium (naranja obscuro) y Diesel (gris obscuro).
+    Inyecta el CSS global para centrar los títulos y aplicar colores específicos 
+    a los encabezados de Regular (verde), Premium (naranja obscuro) y Diesel (gris obscuro).
     """
     st.markdown("""
         <style>
+        /* Centrar todos los encabezados de tabla */
         [data-testid="stHeaderCell"] {
             text-align: center !important;
         }
         [data-testid="stHeaderCell"] > div {
             justify-content: center !important;
         }
-        /* Colores personalizados para los títulos de combustibles en las tablas */
-        [data-testid="stHeaderCell"]:has(div:contains("Regular")) {
+        
+        /* Colores personalizados para los títulos de combustibles en los encabezados */
+        [data-testid="stHeaderCell"] div[data-testid="stMarkdownContainer"] p:has-text("Regular"),
+        [data-testid="stHeaderCell"]:has(div:contains("Regular")) span,
+        [data-testid="stHeaderCell"]:has(div:contains("Regular")) div {
             color: #2e7d32 !important;
         }
-        [data-testid="stHeaderCell"]:has(div:contains("Premium")) {
+        
+        [data-testid="stHeaderCell"]:has(div:contains("Premium")) span,
+        [data-testid="stHeaderCell"]:has(div:contains("Premium")) div {
             color: #d84315 !important;
         }
-        [data-testid="stHeaderCell"]:has(div:contains("Diesel")) {
+        
+        [data-testid="stHeaderCell"]:has(div:contains("Diesel")) span,
+        [data-testid="stHeaderCell"]:has(div:contains("Diesel")) div {
             color: #424242 !important;
         }
         </style>
@@ -30,8 +39,7 @@ def generar_column_config(df, excepciones_decimales=None, columnas_texto=None):
     """
     Genera automáticamente el diccionario column_config para st.dataframe:
     - Las columnas de texto se configuran como TextColumn.
-    - Las columnas numéricas se configuran como enteros (%d).
-    - Aplica excepciones con decimales (ej. 'D/S' con '%.1f').
+    - Las columnas numéricas se configuran con separador de miles (%d o '%,d').
     """
     if excepciones_decimales is None:
         excepciones_decimales = []
@@ -43,8 +51,11 @@ def generar_column_config(df, excepciones_decimales=None, columnas_texto=None):
         if col in columnas_texto:
             column_config[col] = st.column_config.TextColumn(col)
         elif pd.api.types.is_numeric_dtype(df[col]):
-            formato = "%.1f" if col in excepciones_decimales else "%d"
-            column_config[col] = st.column_config.NumberColumn(col, format=formato)
+            if col in excepciones_decimales:
+                column_config[col] = st.column_config.NumberColumn(col, format="%.1f")
+            else:
+                # Usar formato entero con separador de miles estándar de Streamlit
+                column_config[col] = st.column_config.NumberColumn(col, format="%d")
         else:
             column_config[col] = st.column_config.TextColumn(col)
             
