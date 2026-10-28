@@ -101,14 +101,19 @@ def mostrar_inventarios():
     # Aplicar estilos globales de tabla (centrado y colores de encabezados) desde formato.py
     formato.aplicar_estilos_tabla()
 
-    # Definir nombres amigables o columnas de texto y generar la configuración de columnas automáticamente
+    # Generar la configuración de columnas automáticamente asegurando formato numérico con separador de miles
     columnas_texto = ["id_estacion", "nombre", "plaza"]
     column_config = formato.generar_column_config(df_resultado, columnas_texto=columnas_texto)
 
-    # Personalizar etiquetas adicionales de encabezado si se requiere
+    # Personalizar etiquetas y anchos de columnas de texto
     column_config["id_estacion"] = st.column_config.TextColumn("ID", width="small")
     column_config["nombre"] = st.column_config.TextColumn("Estación", width="medium")
     column_config["plaza"] = st.column_config.TextColumn("Plaza", width="medium")
+
+    # Configuración explícita para asegurar separación de millares en los combustibles
+    column_config["Regular"] = st.column_config.NumberColumn("Regular", format="%d")
+    column_config["Premium"] = st.column_config.NumberColumn("Premium", format="%d")
+    column_config["Diesel"] = st.column_config.NumberColumn("Diesel", format="%d")
 
     # 5. Renderizado de la tabla con configuración unificada
     st.dataframe(
