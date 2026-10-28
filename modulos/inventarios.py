@@ -4,6 +4,7 @@ from datetime import date
 import database as db
 from servicios import formato
 
+
 def mostrar_inventarios():
     st.header("📋 Consulta de Inventarios")
 
@@ -48,7 +49,7 @@ def mostrar_inventarios():
     # 4. Procesar y filtrar datos de inventario si existen
     if datos_inventarios:
         df_inventarios = pd.DataFrame(datos_inventarios)
-        
+
         # Asegurar formato correcto de fecha para el filtro
         df_inventarios["fecha"] = pd.to_datetime(df_inventarios["fecha"]).dt.date
 
@@ -64,7 +65,7 @@ def mostrar_inventarios():
                 aggfunc="sum",
                 fill_value=0
             ).reset_index()
-            
+
             # Unir las estaciones filtradas por plaza con el inventario
             df_resultado = pd.merge(
                 df_estaciones_filtradas[["id_estacion", "nombre", "plaza"]],
@@ -111,9 +112,9 @@ def mostrar_inventarios():
     column_config["plaza"] = st.column_config.TextColumn("Plaza", width="medium")
 
     # Configuración explícita para asegurar separación de millares en los combustibles
-    column_config["Regular"] = st.column_config.NumberColumn("Regular", format="%d")
-    column_config["Premium"] = st.column_config.NumberColumn("Premium", format="%d")
-    column_config["Diesel"] = st.column_config.NumberColumn("Diesel", format="%d")
+    column_config["Regular"] = st.column_config.NumberColumn("Regular", format="%.0f")
+    column_config["Premium"] = st.column_config.NumberColumn("Premium", format="%.0f")
+    column_config["Diesel"] = st.column_config.NumberColumn("Diesel", format="%.0f")
 
     # 5. Renderizado de la tabla con configuración unificada
     st.dataframe(
