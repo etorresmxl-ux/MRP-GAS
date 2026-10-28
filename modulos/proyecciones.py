@@ -131,10 +131,10 @@ def mostrar_proyecciones():
                 inv_inicial_hoy = float(match_prod["volumen"].values[0])
 
         fechas_cols = []
-        inv_iniciales_fmt = []
-        ventas_est_fmt = []
-        inv_finales_fmt = []
-        dias_inventario_fmt = []
+        inv_iniciales = []
+        ventas_est = []
+        inv_finales = []
+        dias_inventario = []
 
         inv_actual = inv_inicial_hoy
 
@@ -145,7 +145,7 @@ def mostrar_proyecciones():
             fechas_cols.append(fecha_fmt)
 
             # Consultar Venta Estimada real según el día de la semana correspondiente
-            venta_est = 0.0
+            venta_estimada_dia = 0.0
             if not df_factores.empty:
                 mask = (
                     (df_factores["id_estacion"] == id_estacion_sel) &
@@ -159,47 +159,47 @@ def mostrar_proyecciones():
                             if col_val in match_venta.columns:
                                 val = match_venta[col_val].values[0]
                                 if pd.notna(val):
-                                    venta_est = float(val)
+                                    venta_estimada_dia = float(val)
                                     break
 
-            # CÁLCULOS PRINCIPALES
+            # CÁLCULOS PRINCIPALES (Mantenidos como números reales)
             inv_inicial = inv_actual
-            inv_final = inv_inicial - venta_est
+            inv_final = inv_inicial - venta_estimada_dia
             
-            # Cálculo D/S (Días de Inventario con un decimal: 0.0)
-            ds = (inv_final / venta_est) if venta_est > 0 else 0.0
+            # Cálculo D/S
+            ds = (inv_final / venta_estimada_dia) if venta_estimada_dia > 0 else 0.0
 
-            # Guardar valores con formato de separador de millares y decimales solicitados
-            inv_iniciales_fmt.append(f"{int(round(inv_inicial)):,}")
-            ventas_est_fmt.append(f"{int(round(venta_est)):,}")
-            inv_finales_fmt.append(f"{int(round(inv_final)):,}")
-            dias_inventario_fmt.append(f"{ds:.1f}")
+            inv_iniciales.append(inv_inicial)
+            ventas_est.append(venta_estimada_dia)
+            inv_finales.append(inv_final)
+            dias_inventario.append(ds)
 
             # El inventario final del día actual se vuelve el inicial del día siguiente
             inv_actual = inv_final
 
-        # Construir estructura horizontal (Concepto en vertical, fechas en columnas de texto)
+        # Construir estructura horizontal con datos numéricos limpios
         data_dict = {
             "Concepto": ["Inventario Inicial", "Venta Estimada", "Inventario Final", "D/S"]
         }
         for idx, fecha_fmt in enumerate(fechas_cols):
             data_dict[fecha_fmt] = [
-                inv_iniciales_fmt[idx],
-                ventas_est_fmt[idx],
-                inv_finales_fmt[idx],
-                dias_inventario_fmt[idx]
+                inv_iniciales[idx],
+                ventas_est[idx],
+                inv_finales[idx],
+                dias_inventario[idx]
             ]
 
         df_proyeccion = pd.DataFrame(data_dict)
 
-        # Configuración de columnas de texto para respetar alineación y formato visual exacto
+        # Configuración de columnas dinámicas distinguiendo enteros (con comas) y decimales (D/S)
         column_config = {
             "Concepto": st.column_config.TextColumn("Concepto", width="medium")
         }
-        for fecha_fmt in fechas_cols:
-            column_config[fecha_fmt] = st.column_config.TextColumn(
+        for idx, fecha_fmt in enumerate(fechas_cols):
+            # Identificamos el renglón de D/S para aplicarle formato de 1 decimal, los demás enteros con comas
+            column_config[fecha_fmt] = st.column_config.NumberColumn(
                 fecha_fmt,
-                width="small"
+                format="%.1f" if idx == 3 else "%d"
             )
 
         # Renderizado del DataFrame con Streamlit en formato horizontal
