@@ -30,6 +30,7 @@ def procesar_importacion_estaciones(archivo_subido):
         
         exitos = 0
         errores = 0
+        ultimo_error = ""
         
         for _, row in df_limpio.iterrows():
             try:
@@ -40,9 +41,13 @@ def procesar_importacion_estaciones(archivo_subido):
                     tad=row['tad']
                 )
                 exitos += 1
-            except Exception:
+            except Exception as e:
                 errores += 1
+                ultimo_error = str(e) # Guardamos el error real para depurar
                 
+        if errores > 0 and exitos == 0:
+            return False, f"Fallaron todos los registros. Último error de Supabase: {ultimo_error}", errores, df_limpio
+            
         return True, exitos, errores, df_limpio
     except Exception as e:
         return False, str(e), 0, None
