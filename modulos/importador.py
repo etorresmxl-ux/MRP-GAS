@@ -1,175 +1,59 @@
 import streamlit as st
 import pandas as pd
 import database as db
+from servicios import formato
 
-# =========================================================
-# 1. ESTACIONES
-# =========================================================
-def limpiar_y_normalizar_estaciones(df):
-    df.columns = df.columns.str.strip().str.lower()
-    columnas_requeridas = ['id_estacion', 'nombre', 'plaza', 'tad']
-    for col in columnas_requeridas:
-        if col not in df.columns:
-            raise ValueError(f"Falta la columna obligatoria en el Excel: {col}")
-            
-    df['id_estacion'] = df['id_estacion'].astype(str).str.strip().str.upper()
-    df['nombre'] = df['nombre'].astype(str).str.strip()
-    df['plaza'] = df['plaza'].astype(str).str.strip().fillna('')
-    df['tad'] = df['tad'].astype(str).str.strip().fillna('')
-    df = df.drop_duplicates(subset=['id_estacion'], keep='last')
-    return df
+def mostrar_inventarios():
+    st.header("📋 Consulta de Inventarios")
 
-def procesar_importacion_estaciones(archivo_subido):
-    try:
-        df_raw = pd.read_excel(archivo_subido)
-        df_limpio = limpiar_y_normalizar_estaciones(df_raw)
-        
-        exitos = 0
-        errores = 0
-        ultimo_error = ""
-        
-        for _, row in df_limpio.iterrows():
-            try:
-                db.insertar_estacion(
-                    id_estacion=row['id_estacion'],
-                    nombre=row['nombre'],
-                    plaza=row['plaza'],
-                    tad=row['tad']
-                )
-                exitos += 1
-            except Exception as e:
-                errores += 1
-                ultimo_error = str(e)
-                
-        if errores > 0 and exitos == 0:
-            return False, f"Fallaron todos los registros. Último error: {ultimo_error}", errores, df_limpio
-            
-        return True, exitos, errores, df_limpio
-    except Exception as e:
-        return False, str(e), 0, None
+    # 1. Obtener datos de inventarios y estaciones desde la BD
+    datos_inventarios = db.obtener_inventarios()
+    datos_estaciones = db.obtener_estaciones()
 
+    if not datos_inventarios:
+        st.info("No hay registros de inventario disponibles en la base de datos.")
+        return
 
-# =========================================================
-# 2. INVENTARIOS
-# =========================================================
-def limpiar_y_normalizar_inventarios(df):
-    df.columns = df.columns.str.strip().str.lower()
-    columnas_requeridas = ['id_estacion', 'fecha', 'producto', 'volumen']
-    for col in columnas_requeridas:
-        if col not in df.columns:
-            raise ValueError(f"Falta la columna obligatoria en el Excel: {col}")
-            
-    df['id_estacion'] = df['id_estacion'].astype(str).str.strip().str.upper()
-    df['fecha'] = pd.to_datetime(df['fecha']).dt.strftime('%Y-%m-%d')
-    df['producto'] = df['producto'].astype(str).str.strip().str.capitalize()
-    df['volumen'] = pd.to_numeric(df['volumen'], errors='coerce').fillna(0.0)
-    return df
-
-def procesar_importacion_inventarios(archivo_subido):
-    try:
-        df_raw = pd.read_excel(archivo_subido)
-        df_limpio = limpiar_y_normalizar_inventarios(df_raw)
-        
-        exitos = 0
-        errores = 0
-        ultimo_error = ""
-        
-        for _, row in df_limpio.iterrows():
-            try:
-                db.insertar_inventario(
-                    id_estacion=row['id_estacion'],
-                    fecha=row['fecha'],
-                    producto=row['producto'],
-                    volumen=float(row['volumen'])
-                )
-                exitos += 1
-            except Exception as e:
-                errores += 1
-                ultimo_error = str(e)
-                
-        if errores > 0 and exitos == 0:
-            return False, f"Fallaron todos los registros. Último error: {ultimo_error}", errores, df_limpio
-            
-        return True, exitos, errores, df_limpio
-    except Exception as e:
-        return False, str(e), 0, None
-
-
-# =========================================================
-# 3. VENTAS
-# =========================================================
-def limpiar_y_normalizar_ventas(df):
-    df.columns = df.columns.str.strip().str.lower()
-    columnas_requeridas = ['id_estacion', 'fecha', 'producto', 'volumen']
-    for col in columnas_requeridas:
-        if col not in df.columns:
-            raise ValueError(f"Falta la columna obligatoria en el Excel: {col}")
-            
-    df['id_estacion'] = df['id_estacion'].astype(str).str.strip().str.upper()
-    df['fecha'] = pd.to_datetime(df['fecha']).dt.strftime('%Y-%m-%d')
-    df['producto'] = df['producto'].astype(str).str.strip().str.capitalize()
-    df['volumen'] = pd.to_numeric(df['volumen'], errors='coerce').fillna(0.0)
-    return df
-
-def procesar_importacion_ventas(archivo_subido):
-    try:
-        df_raw = pd.read_excel(archivo_subido)
-        df_limpio = limpiar_y_normalizar_ventas(df_raw)
-        
-        exitos = 0
-        errores = 0
-        ultimo_error = ""
-        
-        for _, row in df_limpio.iterrows():
-            try:
-                db.insertar_venta(
-                    id_estacion=row['id_estacion'],
-                    fecha=row['fecha'],
-                    producto=row['producto'],
-                    volumen=float(row['volumen'])
-                )
-                exitos += 1
-            except Exception as e:
-                errores += 1
-                ultimo_error = str(e)
-                
-        if errores > 0 and exitos == 0:
-            return False, f"Fallaron todos los registros. Último error: {ultimo_error}", errores, df_limpio
-            
-        return True, exitos, errores, df_limpio
-    except Exception as e:
-        return False, str(e), 0, None
-
-
-# =========================================================
-# 4. INTERFAZ DE USUARIO (STREAMLIT) - FUNCIÓN REQUERIDA
-# =========================================================
-def mostrar_importador():
-    st.header("📥 Módulo de Importación de Datos")
+    df_inv = pd.DataFrame(datos_inventarios)
     
-    tipo_archivo = st.selectbox(
-        "Selecciona el tipo de datos a importar:",
-        ["Estaciones", "Inventarios", "Ventas"]
+    # Asegurar formato de fecha legible si existe
+    if "fecha" in df_inv.columns:
+        df_inv["fecha"] = pd.to_datetime(df_inv["fecha"]).dt.strftime("%Y-%m-%d")
+
+    # 2. Filtros opcionales por Estación / Plaza si se cuenta con el catálogo de estaciones
+    if datos_estaciones:
+        df_estaciones = pd.DataFrame(datos_estaciones)
+        
+        # Merge para enriquecer con nombre de estación o plaza si es necesario
+        if "id_estacion" in df_inv.columns and "id_estacion" in df_estaciones.columns:
+            df_inv = pd.merge(df_inv, df_estaciones[["id_estacion", "nombre", "plaza"]], on="id_estacion", how="left")
+
+        col1, col2 = st.columns(2)
+        with col1:
+            plazas = ["Todas"] + sorted(list(df_inv["plaza"].dropna().unique())) if "plaza" in df_inv.columns else ["Todas"]
+            plaza_sel = st.selectbox("Filtrar por Plaza:", options=plazas, key="filtro_plaza_inv")
+            if plaza_sel != "Todas" and "plaza" in df_inv.columns:
+                df_inv = df_inv[df_inv["plaza"] == plaza_sel]
+
+        with col2:
+            productos = ["Todos"] + sorted(list(df_inv["producto"].dropna().unique())) if "producto" in df_inv.columns else ["Todos"]
+            prod_sel = st.selectbox("Filtrar por Producto:", options=productos, key="filtro_prod_inv")
+            if prod_sel != "Todos" and "producto" in df_inv.columns:
+                df_inv = df_inv[df_inv["producto"].str.capitalize() == prod_sel.capitalize()]
+
+    # 3. Aplicar el servicio centralizado de formato
+    formato.aplicar_estilos_tabla()
+    
+    # Generar configuración de columnas (si el volumen requiere decimales, se puede agregar a excepciones_decimales)
+    column_config = formato.generar_column_config(
+        df_inv, 
+        excepciones_decimales=["volumen"] # Permite que el volumen muestre decimales o formato numérico adecuado
     )
-    
-    archivo_subido = st.file_uploader(
-        f"Sube el archivo Excel para {tipo_archivo}",
-        type=["xlsx", "xls"]
+
+    # 4. Renderizar tabla con diseño limpio y centralizado
+    st.dataframe(
+        df_inv,
+        use_container_width=True,
+        hide_index=True,
+        column_config=column_config
     )
-    
-    if archivo_subido is not None:
-        if st.button("Procesar e Importar"):
-            with st.spinner("Procesando archivo..."):
-                if tipo_archivo == "Estaciones":
-                    exitos, resultado_msg, errores, df_resultado = procesar_importacion_estaciones(archivo_subido)
-                elif tipo_archivo == "Inventarios":
-                    exitos, resultado_msg, errores, df_resultado = procesar_importacion_inventarios(archivo_subido)
-                else:
-                    exitos, resultado_msg, errores, df_resultado = procesar_importacion_ventas(archivo_subido)
-                
-                if exitos:
-                    st.success(f"¡Importación exitosa! Se procesaron {resultado_msg} registros correctamente.")
-                    if df_resultado is not None:
-                        st.dataframe(df_resultado.head(), use_container_width=True)
-                else:
-                    st.error(f"Hubo un error en la importación: {resultado_msg}")
