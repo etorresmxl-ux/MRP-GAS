@@ -1,3 +1,4 @@
+import streamlit as st
 import pandas as pd
 import database as db
 
@@ -138,3 +139,37 @@ def procesar_importacion_ventas(archivo_subido):
         return True, exitos, errores, df_limpio
     except Exception as e:
         return False, str(e), 0, None
+
+
+# =========================================================
+# 4. INTERFAZ DE USUARIO (STREAMLIT) - SOLUCIÓN DEL ERROR
+# =========================================================
+def mostrar_importador():
+    st.header("📥 Módulo de Importación de Datos")
+    
+    tipo_archivo = st.selectbox(
+        "Selecciona el tipo de datos a importar:",
+        ["Estaciones", "Inventarios", "Ventas"]
+    )
+    
+    archivo_subido = st.file_uploader(
+        f"Sube el archivo Excel para {tipo_archivo}",
+        type=["xlsx", "xls"]
+    )
+    
+    if archivo_subido is not None:
+        if st.button("Procesar e Importar"):
+            with st.spinner("Procesando archivo..."):
+                if tipo_archivo == "Estaciones":
+                    exitos, resultado_msg, errores, df_resultado = procesar_importacion_estaciones(archivo_subido)
+                elif tipo_archivo == "Inventarios":
+                    exitos, resultado_msg, errores, df_resultado = procesar_importacion_inventarios(archivo_subido)
+                else:
+                    exitos, resultado_msg, errores, df_resultado = procesar_importacion_ventas(archivo_subido)
+                
+                if exitos:
+                    st.success(f"¡Importación exitosa! Se procesaron {resultado_msg} registros correctamente.")
+                    if df_resultado is not None:
+                        st.dataframe(df_resultado.head(), use_container_width=True)
+                else:
+                    st.error(f"Hubo un error en la importación: {resultado_msg}")
