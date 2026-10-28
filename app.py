@@ -2,8 +2,8 @@ import streamlit as st
 import pandas as pd
 from datetime import date
 import database as db
-from modulos import importador   # <-- Importado desde la carpeta modulos
-from modulos import estaciones   # <-- Importado desde la carpeta modulos
+from modulos import importador
+from modulos import estaciones
 
 # Configuración inicial de la página
 st.set_page_config(
@@ -14,7 +14,7 @@ st.set_page_config(
 
 st.title("⛽ Sistema de Gestión de Combustible")
 
-# Menú lateral actualizado con las opciones correspondientes
+# Menú lateral de navegación
 menu = st.sidebar.selectbox(
     "Navegación",
     ["Estaciones", "Inventarios", "Ventas", "Importador"]
@@ -27,27 +27,119 @@ if menu == "Estaciones":
     estaciones.mostrar_estaciones()
 
 # ---------------------------------------------------------
-# SECCIÓN 4: IMPORTADOR MASIVO
+# SECCIÓN 2: INVENTARIOS
+# ---------------------------------------------------------
+elif menu == "Inventarios":
+    st.header("📦 Gestión de Inventarios")
+    st.write("Consulta y registro de inventarios por estación.")
+    # Aquí puedes agregar la lógica o módulo correspondiente a inventarios
+
+# ---------------------------------------------------------
+# SECCIÓN 3: VENTAS
+# ---------------------------------------------------------
+elif menu == "Ventas":
+    st.header("💰 Gestión de Ventas")
+    st.write("Consulta y registro de ventas por estación.")
+    # Aquí puedes agregar la lógica o módulo correspondiente a ventas
+
+# ---------------------------------------------------------
+# SECCIÓN 4: IMPORTADOR MASIVO EN 3 PESTAÑAS
 # ---------------------------------------------------------
 elif menu == "Importador":
-    st.header("📁 Módulo de Importación Masiva de Estaciones")
-    st.write("Sube tu archivo de Excel (.xlsx) para realizar la limpieza, normalización y carga masiva automática a Supabase.")
+    st.header("📁 Módulo de Importación Masiva")
+    st.write("Sube tus archivos de Excel (`.xlsx`) para verificar los datos antes de guardarlos en Supabase.")
     
-    archivo_excel = st.file_uploader("Selecciona el archivo Excel", type=["xlsx"], key="upload_importador")
+    # Separación por 3 pestañas independientes
+    tab_estaciones, tab_inventarios, tab_ventas = st.tabs(["📍 Estaciones", "📦 Inventarios", "💰 Ventas"])
+    
+    # -----------------------------------------------------
+    # PESTAÑA 1: ESTACIONES
+    # -----------------------------------------------------
+    with tab_estaciones:
+        st.subheader("Importador de Estaciones")
+        st.info("Columnas obligatorias: `id_estacion`, `nombre`, `plaza`, `tad`")
+        
+        archivo_est = st.file_uploader("Subir Excel de Estaciones", type=["xlsx"], key="up_estaciones")
+        if archivo_est is not None:
+            try:
+                df_limpio = importador.limpiar_y_normalizar_estaciones(pd.read_excel(archivo_est))
+                
+                # Inspección de datos
+                st.markdown("### 📊 Confirmación de Datos a Registrar")
+                c1, c2 = st.columns(2)
+                c1.metric("Total Registros Únicos", len(df_limpio))
+                c2.metric("Plazas Detectadas", df_limpio['plaza'].nunique())
+                
+                st.dataframe(df_limpio, use_container_width=True)
+                
+                if st.button("Confirmar y Guardar Estaciones", key="btn_estaciones"):
+                    exito, res_exitos, res_errores, _ = importador.procesar_importacion_estaciones(archivo_est)
+                    if exito:
+                        st.success(f"¡Éxito! Registros guardados: {res_exitos}. Errores/Omitidos: {res_errores}")
+                        st.rerun()
+                    else:
+                        st.error(f"Error al procesar: {res_exitos}")
+            except Exception as e:
+                st.error(f"Error en la estructura del Excel: {e}")
 
-    if archivo_excel is not None:
-        try:
-            # Vista previa rápida del archivo cargado
-            df_preview = pd.read_excel(archivo_excel)
-            st.subheader("Vista previa de los datos:")
-            st.dataframe(df_preview.head(), use_container_width=True)
-            
-            if st.button("Procesar y Guardar en Supabase"):
-                exito, res_exitos, res_errores, df_procesado = importador.procesar_importacion_estaciones(archivo_excel)
-                if exito:
-                    st.success(f"¡Importación exitosa! Registros guardados: {res_exitos}. Omitidos o con error: {res_errores}.")
-                    st.rerun()
-                else:
-                    st.error(f"Error al procesar la importación: {res_exitos}")
-        except Exception as e:
-            st.error(f"No se pudo leer el archivo Excel: {e}")
+    # -----------------------------------------------------
+    # PESTAÑA 2: INVENTARIOS
+    # -----------------------------------------------------
+    with tab_inventarios:
+        st.subheader("Importador de Inventarios")
+        st.info("Columnas obligatorias: `id_estacion`, `fecha`, `producto`, `volumen`")
+        
+        archivo_inv = st.file_uploader("Subir Excel de Inventarios", type=["xlsx"], key="up_inventarios")
+        if archivo_inv is not None:
+            try:
+                df_limpio = importador.limpiar_y_normalizar_inventarios(pd.read_excel(archivo_inv))
+                
+                # Inspección de datos
+                st.markdown("### 📊 Confirmación de Datos a Registrar")
+                c1, c2, c3 = st.columns(3)
+                c1.metric("Total Registros", len(df_limpio))
+                c2.metric("Volumen Total", f"{df_limpio['volumen'].sum():,.2f} Lts")
+                c3.metric("Productos", ", ".join(df_limpio['producto'].unique()))
+                
+                st.dataframe(df_limpio, use_container_width=True)
+                
+                if st.button("Confirmar y Guardar Inventarios", key="btn_inventarios"):
+                    exito, res_exitos, res_errores, _ = importador.procesar_importacion_inventarios(archivo_inv)
+                    if exito:
+                        st.success(f"¡Éxito! Registros guardados: {res_exitos}. Errores/Omitidos: {res_errores}")
+                        st.rerun()
+                    else:
+                        st.error(f"Error al procesar: {res_exitos}")
+            except Exception as e:
+                st.error(f"Error en la estructura del Excel: {e}")
+
+    # -----------------------------------------------------
+    # PESTAÑA 3: VENTAS
+    # -----------------------------------------------------
+    with tab_ventas:
+        st.subheader("Importador de Ventas")
+        st.info("Columnas obligatorias: `id_estacion`, `fecha`, `producto`, `volumen`")
+        
+        archivo_ven = st.file_uploader("Subir Excel de Ventas", type=["xlsx"], key="up_ventas")
+        if archivo_ven is not None:
+            try:
+                df_limpio = importador.limpiar_y_normalizar_ventas(pd.read_excel(archivo_ven))
+                
+                # Inspección de datos
+                st.markdown("### 📊 Confirmación de Datos a Registrar")
+                c1, c2, c3 = st.columns(3)
+                c1.metric("Total Registros", len(df_limpio))
+                c2.metric("Volumen Vendido Total", f"{df_limpio['volumen'].sum():,.2f} Lts")
+                c3.metric("Productos", ", ".join(df_limpio['producto'].unique()))
+                
+                st.dataframe(df_limpio, use_container_width=True)
+                
+                if st.button("Confirmar y Guardar Ventas", key="btn_ventas"):
+                    exito, res_exitos, res_errores, _ = importador.procesar_importacion_ventas(archivo_ven)
+                    if exito:
+                        st.success(f"¡Éxito! Registros guardados: {res_exitos}. Errores/Omitidos: {res_errores}")
+                        st.rerun()
+                    else:
+                        st.error(f"Error al procesar: {res_exitos}")
+            except Exception as e:
+                st.error(f"Error en la estructura del Excel: {e}")
