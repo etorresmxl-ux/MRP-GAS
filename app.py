@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import date
 import database as db
+import importador  # Importamos nuestro módulo de importación masiva
 
 # Configuración inicial de la página
 st.set_page_config(
@@ -12,10 +13,10 @@ st.set_page_config(
 
 st.title("⛽ Sistema de Gestión de Combustible")
 
-# Menú lateral
+# Menú lateral actualizado con la opción "Importador"
 menu = st.sidebar.selectbox(
     "Navegación",
-    ["Estaciones", "Inventarios", "Ventas"]
+    ["Estaciones", "Inventarios", "Ventas", "Importador"]
 )
 
 # ---------------------------------------------------------
@@ -66,7 +67,6 @@ elif menu == "Inventarios":
     if not estaciones_data:
         st.warning("Primero debes registrar al menos una Estación en el menú 'Estaciones'.")
     else:
-        # Mapeo para seleccionar la estación fácilmente
         opciones_estaciones = {e['nombre']: e['id_estacion'] for e in estaciones_data}
         
         col1, col2 = st.columns([1, 2])
@@ -94,7 +94,6 @@ elif menu == "Inventarios":
             inventarios_data = db.obtener_inventarios()
             if inventarios_data:
                 df_inv = pd.DataFrame(inventarios_data)
-                # Formatear el nombre de la estación si viene relacional
                 if 'estaciones' in df_inv.columns:
                     df_inv['estacion_nombre'] = df_inv['estaciones'].apply(lambda x: x.get('nombre') if isinstance(x, dict) else '')
                     df_inv = df_inv.drop(columns=['estaciones'])
@@ -148,3 +147,29 @@ elif menu == "Ventas":
                 st.dataframe(df_ventas, use_container_width=True)
             else:
                 st.info("No hay ventas registradas.")
+
+# ---------------------------------------------------------
+# SECCIÓN 4: IMPORTADOR MASIVO
+# ---------------------------------------------------------
+elif menu == "Importador":
+    st.header("📁 Módulo de Importación Masiva de Estaciones")
+    st.write("Sube tu archivo de Excel (`.xlsx`) para realizar la limpieza, normalización y carga masiva automática a Supabase.")
+    
+    archivo_excel = st.file_uploader("Selecciona el archivo Excel", type=["xlsx"], key="upload_importador")
+    
+    if archivo_excel is not None:
+        try:
+            # Vista previa rápida del archivo cargado
+            df_preview = pd.read_excel(archivo_excel)
+            st.subheader("Vista previa de los datos:")
+            st.dataframe(df_preview.head(), use_container_width=True)
+            
+            if st.button("Procesar y Guardar en Supabase"):
+                exito, res_exitos, res_errores, df_procesado = importador.procesar_importacion_estaciones(archivo_excel)
+                if exito:
+                    st.success(f"¡Importación exitosa! Registros guardados: {res_exitos}. Omitidos o con error: {res_errores}.")
+                    st.rerun()
+                else:
+                    st.error(f"Error al procesar la importación: {res_exitos}")
+        except Exception as e:
+            st.error(f"No se pudo leer el archivo Excel: {e}")
