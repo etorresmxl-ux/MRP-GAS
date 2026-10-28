@@ -63,15 +63,20 @@ def mostrar_proyecciones():
     
     if datos_inventarios:
         df_inv = pd.DataFrame(datos_inventarios)
-        df_inv["fecha"] = pd.to_datetime(df_inv["fecha"]).dt.date
-        df_inv_hoy = df_inv[
-            (df_inv["id_estacion"] == id_estacion_sel) & 
-            (df_inv["fecha"] == fecha_hoy)
-        ]
+        if "fecha" in df_inv.columns:
+            df_inv["fecha"] = pd.to_datetime(df_inv["fecha"]).dt.date
+            df_inv_hoy = df_inv[
+                (df_inv["id_estacion"] == id_estacion_sel) & 
+                (df_inv["fecha"] == fecha_hoy)
+            ]
 
     # Obtener modelo/promedio de venta proyectada por día del servicio de cálculos
     try:
         df_vdp_diarios = calculos.obtener_vdp_diario_12w()
+        if not df_vdp_diarios.empty and "fecha" in df_vdp_diarios.columns:
+            df_vdp_diarios["fecha_dt"] = pd.to_datetime(df_vdp_diarios["fecha"]).dt.date
+        else:
+            df_vdp_diarios = pd.DataFrame()
     except Exception:
         df_vdp_diarios = pd.DataFrame()
 
@@ -95,7 +100,7 @@ def mostrar_proyecciones():
 
         # Obtener inventario registrado hoy para el producto
         inv_inicial_hoy = 0
-        if not df_inv_hoy.empty:
+        if not df_inv_hoy.empty and "producto" in df_inv_hoy.columns:
             match_prod = df_inv_hoy[df_inv_hoy["producto"].str.capitalize() == producto]
             if not match_prod.empty:
                 inv_inicial_hoy = int(match_prod["volumen"].values[0])
@@ -108,13 +113,13 @@ def mostrar_proyecciones():
             fecha_dia = fecha_hoy + timedelta(days=i)
             fecha_fmt = formatear_fecha_corta(fecha_dia)
 
-            # Consultar Venta Estimada (VDP) para este producto y fecha
+            # Consultar Venta Estimada (VDP) para este producto y fecha de forma segura
             venta_est = 0
-            if not df_vdp_diarios.empty:
+            if not df_vdp_diarios.empty and "fecha_dt" in df_vdp_diarios.columns:
                 vdp_match = df_vdp_diarios[
                     (df_vdp_diarios["id_estacion"] == id_estacion_sel) &
                     (df_vdp_diarios["producto"].str.capitalize() == producto) &
-                    (pd.to_datetime(df_vdp_diarios["fecha"]).dt.date == fecha_dia)
+                    (df_vdp_diarios["fecha_dt"] == fecha_dia)
                 ]
                 if not vdp_match.empty:
                     venta_est = int(vdp_match["volumen"].values[0])
@@ -123,7 +128,7 @@ def mostrar_proyecciones():
             inv_inicial = inv_actual
             inv_final = inv_inicial - venta_est
             
-            # Cálculo D/S (Días de Inventario segun el inventario y la venta del día)
+            # Cálculo D/S (Días de Inventario según el inventario y la venta del día)
             ds = int(inv_final / venta_est) if venta_est > 0 else 0
 
             filas.append({
