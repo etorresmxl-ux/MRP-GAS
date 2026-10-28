@@ -70,15 +70,15 @@ def mostrar_proyecciones():
                 (df_inv["fecha"] == fecha_hoy)
             ]
 
-    # Obtener modelo/promedio de venta proyectada por día del servicio de cálculos
+    # Obtener la venta proyectada y factores de estacionalidad desde calculos.py
     try:
-        df_vdp_diarios = calculos.obtener_vdp_diario_12w()
-        if not df_vdp_diarios.empty and "fecha" in df_vdp_diarios.columns:
-            df_vdp_diarios["fecha_dt"] = pd.to_datetime(df_vdp_diarios["fecha"]).dt.date
+        df_factores = calculos.obtener_factores_estacionalidad_dia()
+        if not df_factores.empty and "fecha" in df_factores.columns:
+            df_factores["fecha_dt"] = pd.to_datetime(df_factores["fecha"]).dt.date
         else:
-            df_vdp_diarios = pd.DataFrame()
+            df_factores = pd.DataFrame()
     except Exception:
-        df_vdp_diarios = pd.DataFrame()
+        df_factores = pd.DataFrame()
 
     productos = ["Regular", "Premium", "Diesel"]
 
@@ -119,22 +119,37 @@ def mostrar_proyecciones():
             fecha_fmt = formatear_fecha_corta(fecha_dia)
             fechas_cols.append(fecha_fmt)
 
-            # Consultar Venta Estimada (VDP) para este producto y fecha de forma segura
+            # Consultar Venta Estimada (Venta Proyectada del Día) desde calculos.py de forma segura
             venta_est = 0
-            if not df_vdp_diarios.empty and "fecha_dt" in df_vdp_diarios.columns:
-                vdp_match = df_vdp_diarios[
-                    (df_vdp_diarios["id_estacion"] == id_estacion_sel) &
-                    (df_vdp_diarios["producto"].str.capitalize() == producto) &
-                    (df_vdp_diarios["fecha_dt"] == fecha_dia)
-                ]
-                if not vdp_match.empty:
-                    venta_est = int(vdp_match["volumen"].values[0])
-            
+            if not df_factores.empty:
+                # Intentamos buscar por fecha exacta si la vista la provee
+                if "fecha_dt" in df_factores.columns:
+                    match_venta = df_factores[
+                        (df_factores["id_estacion"] == id_estacion_sel) &
+                        (df_factores["producto"].str.capitalize() == producto) &
+                        (df_factores["fecha_dt"] == fecha_dia)
+                    ]
+                    if not match_venta.empty and "venta_proyectada_dia" in match_venta.columns:
+                        venta_est = int(match_venta["venta_proyectada_dia"].values[0])
+                
+                # Si no hay coincidencia exacta por fecha pero sí por día de la semana o VDP ponderada general
+                if venta_est == 0 and "vdp_ponderada" in df_factores.columns:
+                    match_vdp = df_factores[
+                        (df_factores["id_estacion"] == id_estacion_sel) &
+                        (df_factores["producto"].str.capitalize() == producto)
+                    ]
+                    if not match_vdp.empty:
+                        # Si cuenta con venta_proyectada_dia general, la tomamos como estimación base
+                        if "venta_proyectada_dia" in match_vdp.columns:
+                            venta_est = int(match_vdp["venta_proyectada_dia"].values[0])
+                        elif "vdp_ponderada" in match_vdp.columns:
+                            venta_est = int(match_vdp["vdp_ponderada"].values[0])
+
             # CÁLCULOS PRINCIPALES
             inv_inicial = inv_actual
             inv_final = inv_inicial - venta_est
             
-            # Cálculo D/S (Días de Inventario según el inventario y la venta del día)
+            # Cálculo D/S (Días de Inventario según el inventario final y la venta estimada)
             ds = int(inv_final / venta_est) if venta_est > 0 else 0
 
             inv_iniciales.append(int(inv_inicial))
@@ -169,7 +184,7 @@ def mostrar_proyecciones():
                 format="%d"
             )
 
-        # Renderizado del DataFrame con Streamlit
+        # Renderizado del DataFrame con Streamlit en formato horizontal
         st.dataframe(
             df_proyeccion,
             use_container_width=True,
