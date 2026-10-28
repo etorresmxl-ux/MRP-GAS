@@ -2,7 +2,8 @@ import streamlit as st
 import pandas as pd
 from datetime import date, timedelta
 import database as db
-from servicios import calculos
+from servicios import calculos, formato
+
 
 def formatear_fecha_corta(fecha):
     """
@@ -16,6 +17,7 @@ def formatear_fecha_corta(fecha):
     dia_str = dias_semana[fecha.weekday()]
     mes_str = meses[fecha.month]
     return f"{dia_str} - {fecha.day:02d}-{mes_str}"
+
 
 def normalizar_dia_semana(valor_dia):
     """
@@ -34,6 +36,7 @@ def normalizar_dia_semana(valor_dia):
         'domingo': 6, 'dom': 6
     }
     return mapa.get(val, None)
+
 
 def mostrar_proyecciones():
     st.header("📈 Proyección e Integridad de Inventarios (14 Días)")
@@ -96,7 +99,7 @@ def mostrar_proyecciones():
                 if c in df_factores.columns:
                     col_dia_encontrada = c
                     break
-            
+
             if col_dia_encontrada:
                 df_factores["dia_index"] = df_factores[col_dia_encontrada].apply(normalizar_dia_semana)
         else:
@@ -106,27 +109,18 @@ def mostrar_proyecciones():
 
     productos = ["Regular", "Premium", "Diesel"]
 
-    # Estilos CSS para centrar títulos de encabezado en st.dataframe
-    st.markdown("""
-        <style>
-        [data-testid="stHeaderCell"] {
-            text-align: center !important;
-        }
-        [data-testid="stHeaderCell"] > div {
-            justify-content: center !important;
-        }
-        </style>
-    """, unsafe_allow_html=True)
+    # Estilos globales para la tabla de proyecciones
+    formato.aplicar_estilos_tabla()
 
     # 4. Generar tabla horizontal de proyecciones por cada producto
     for producto in productos:
         # Definir color según el tipo de producto solicitado
         if producto == "Regular":
-            color_Hex = "#2e7d32" # Verde
+            color_Hex = "#2e7d32"  # Verde
         elif producto == "Premium":
-            color_Hex = "#d84315" # Naranja obscuro
+            color_Hex = "#d84315"  # Naranja obscuro
         else:
-            color_Hex = "#424242" # Gris obscuro
+            color_Hex = "#424242"  # Gris obscuro
 
         st.markdown(f"<h3 style='color: {color_Hex};'>⛽ Producto: {producto}</h3>", unsafe_allow_html=True)
 
@@ -158,7 +152,7 @@ def mostrar_proyecciones():
                     (df_factores["id_estacion"] == id_estacion_sel) &
                     (df_factores["producto"].str.capitalize() == producto)
                 )
-                
+
                 if "dia_index" in df_factores.columns:
                     match_venta = df_factores[mask & (df_factores["dia_index"] == fecha_dia.weekday())]
                     if not match_venta.empty and "venta_proyectada_dia" in match_venta.columns:
@@ -173,7 +167,7 @@ def mostrar_proyecciones():
             # CÁLCULOS PRINCIPALES (Numéricos puros)
             inv_inicial = inv_actual
             inv_final = inv_inicial - venta_estimada_dia
-            
+
             # Cálculo D/S
             ds = (inv_final / venta_estimada_dia) if venta_estimada_dia > 0 else 0.0
 
@@ -199,21 +193,28 @@ def mostrar_proyecciones():
 
         df_proyeccion = pd.DataFrame(data_dict)
 
-        # Configuración de columnas con NumberColumn para asegurar formato decimal exacto
+        # Prepara el Styler para que los números muestren miles y decimales
+        columnas_numericas = [col for col in df_proyeccion.columns if col != "Concepto"]
+        df_styled = formato.formatear_dataframe_numero(
+            df_proyeccion,
+            columnas=columnas_numericas,
+            columnas_decimales=[columnas_numericas[-1]]
+        )
+
+        # Configuración de columnas con NumberColumn para mantener layout legible
         column_config = {
             "Concepto": st.column_config.TextColumn("Concepto", width="medium")
         }
-        for idx, fecha_fmt in enumerate(fechas_cols):
-            # Fila 3 corresponde a D/S (índice 3), la cual lleva 1 decimal (0.0). Las demás llevan enteros.
-            column_config[fecha_fmt] = st.column_config.NumberColumn(
-                fecha_fmt,
-                format="%.1f" if idx == 3 else "%d",
-                help="Días de Inventario (D/S)" if idx == 3 else "Volumen en Litros"
+        for col in columnas_numericas:
+            column_config[col] = st.column_config.NumberColumn(
+                col,
+                format="%.1f" if col == columnas_numericas[-1] else "%d",
+                help="Días de Inventario (D/S)" if col == columnas_numericas[-1] else "Volumen en Litros"
             )
 
         # Renderizado del DataFrame con Streamlit en formato horizontal
         st.dataframe(
-            df_proyeccion,
+            df_styled,
             use_container_width=True,
             hide_index=True,
             column_config=column_config

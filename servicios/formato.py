@@ -51,17 +51,26 @@ def generar_column_config(df, excepciones_decimales=None, columnas_texto=None):
     return column_config
 
 
-def formatear_dataframe_numero(df, columnas=None):
+def formatear_dataframe_numero(df, columnas=None, columnas_decimales=None):
     """
-    Devuelve un Styler con miles separados para columnas numéricas.
-    Esto es más fiable que depender solo de NumberColumn en Streamlit.
+    Devuelve un Styler con formato numérico legible, con miles separados y
+    con soporte para columnas que requieren un decimal específico.
     """
     if columnas is None:
-        columnas = ["Regular", "Premium", "Diesel"]
+        columnas = [c for c in df.columns if c != "Concepto"]
 
     columnas = [c for c in columnas if c in df.columns]
     if not columnas:
         return df
 
-    styler = df.style.format({col: "{:,.0f}" for col in columnas})
-    return styler
+    if columnas_decimales is None:
+        columnas_decimales = []
+
+    formato_por_columna = {}
+    for col in columnas:
+        if col in columnas_decimales:
+            formato_por_columna[col] = "{:,.1f}"
+        else:
+            formato_por_columna[col] = "{:,.0f}"
+
+    return df.style.format(formato_por_columna)
