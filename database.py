@@ -10,7 +10,9 @@ def get_supabase_client() -> Client:
 
 supabase = get_supabase_client()
 
+# =========================================================
 # --- FUNCIONES DE ESTACIONES ---
+# =========================================================
 def obtener_estaciones():
     response = supabase.table("estaciones").select("*").execute()
     return response.data
@@ -24,7 +26,10 @@ def insertar_estacion(id_estacion, nombre, plaza, tad):
     }
     return supabase.table("estaciones").insert(data).execute()
 
+
+# =========================================================
 # --- FUNCIONES DE INVENTARIOS ---
+# =========================================================
 def obtener_inventarios():
     response = supabase.table("inventarios").select("*, estaciones(nombre)").execute()
     return response.data
@@ -38,7 +43,10 @@ def insertar_inventario(id_estacion, fecha, producto, volumen):
     }
     return supabase.table("inventarios").insert(data).execute()
 
+
+# =========================================================
 # --- FUNCIONES DE VENTAS ---
+# =========================================================
 def obtener_ventas():
     response = supabase.table("ventas").select("*, estaciones(nombre)").execute()
     return response.data
@@ -51,3 +59,17 @@ def insertar_venta(id_estacion, fecha, producto, volumen):
         "volumen": float(volumen)
     }
     return supabase.table("ventas").insert(data).execute()
+
+
+# =========================================================
+# --- FUNCIONES DE VISTAS SQL (ÚLTIMAS 12 SEMANAS) ---
+# =========================================================
+def obtener_venta_semanal_promedio_12w():
+    """Obtiene la venta semanal de las últimas 12 semanas por estación y producto desde Supabase."""
+    response = supabase.table("venta_semanal_promedio_12w").select("*").execute()
+    return response.data
+
+def obtener_venta_promedio_dia_semana_12w():
+    """Obtiene la venta promedio por día de la semana de las últimas 12 semanas por estación y producto desde Supabase."""
+    response = supabase.table("venta_promedio_dia_de_la_semana_12w").select("*").execute()
+    return response.data
