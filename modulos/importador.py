@@ -142,7 +142,7 @@ def procesar_importacion_ventas(archivo_subido):
 
 
 # =========================================================
-# 4. INTERFAZ DE USUARIO (STREAMLIT) - SOLUCIÓN DEL ERROR
+# 4. INTERFAZ DE USUARIO (STREAMLIT) - FUNCIÓN REQUERIDA
 # =========================================================
 def mostrar_importador():
     st.header("📥 Módulo de Importación de Datos")
