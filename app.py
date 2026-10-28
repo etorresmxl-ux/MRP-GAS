@@ -4,8 +4,9 @@ from datetime import date
 import database as db
 from modulos import importador
 from modulos import estaciones
-from modulos import inventarios  # Módulo de inventarios integrado
-from servicios import calculos  # <-- Importamos nuestro servicio centralizado
+from modulos import inventarios
+from modulos import proyecciones  # <-- Módulo de proyecciones integrado
+from servicios import calculos
 
 ### Configuración inicial de la página
 st.set_page_config(
@@ -26,7 +27,7 @@ with st.spinner("Cargando y procesando modelos de consumo (12 semanas)..."):
 ### Menú lateral de navegación
 menu = st.sidebar.radio(
     "Selecciona una sección",
-    ["Estaciones", "Inventarios", "Ventas", "Importador", "Indicadores (Prueba)"],
+    ["Estaciones", "Inventarios", "Proyecciones", "Ventas", "Importador", "Indicadores (Prueba)"],
     label_visibility="collapsed"
 )
 
@@ -43,7 +44,20 @@ elif menu == "Inventarios":
     inventarios.mostrar_inventarios()
 
 ### ---------------------------------------------------------
-### SECCIÓN 3: IMPORTADOR
+### SECCIÓN 3: PROYECCIONES
+### ---------------------------------------------------------
+elif menu == "Proyecciones":
+    proyecciones.mostrar_proyecciones()
+
+### ---------------------------------------------------------
+### SECCIÓN 4: VENTAS
+### ---------------------------------------------------------
+elif menu == "Ventas":
+    st.header("📊 Módulo de Ventas")
+    st.info("Sección en desarrollo.")
+
+### ---------------------------------------------------------
+### SECCIÓN 5: IMPORTADOR
 ### ---------------------------------------------------------
 elif menu == "Importador":
     importador.mostrar_importador()
@@ -53,7 +67,7 @@ elif menu == "Importador":
 ### ---------------------------------------------------------
 elif menu == "Indicadores (Prueba)":
     st.header("📈 Indicadores Ponderados (Servicio Centralizado)")
-    st.write("Estos datos se cargan una sola vez al abrir la aplicación y están listos para cualquier módulo (como programación de combustible).")
+    st.write("Estos datos se cargan una sola vez al abrir la aplicación y están listos para cualquier módulo.")
     
     if not df_ponderados.empty:
         st.subheader("VSP y VDP Ponderada por Estación y Producto")
