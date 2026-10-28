@@ -15,8 +15,6 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("⛽ Sistema de Gestión de Combustible")
-
 ### ---------------------------------------------------------
 ### CARGA GLOBAL AL INICIAR LA PÁGINA (Evita redundancias)
 ### ---------------------------------------------------------
