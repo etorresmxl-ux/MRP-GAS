@@ -6,7 +6,7 @@ from servicios import calculos
 
 def formatear_fecha_corta(fecha):
     """
-    Devuelve la fecha en el formato pedido: 'ddd, - dd-mmm' (p. ej. 'lun, - 28-oct').
+    Devuelve la fecha en el formato pedido: 'ddd - dd-mmm' (p. ej. 'lun - 28-oct').
     """
     dias_semana = {0: "lun", 1: "mar", 2: "mié", 3: "jue", 4: "vie", 5: "sáb", 6: "dom"}
     meses = {
@@ -15,7 +15,7 @@ def formatear_fecha_corta(fecha):
     }
     dia_str = dias_semana[fecha.weekday()]
     mes_str = meses[fecha.month]
-    return f"{dia_str}, - {fecha.day:02d}-{mes_str}"
+    return f"{dia_str} - {fecha.day:02d}-{mes_str}"
 
 def normalizar_dia_semana(valor_dia):
     """
@@ -92,7 +92,6 @@ def mostrar_proyecciones():
         df_factores = calculos.obtener_factores_estacionalidad_dia()
         if not df_factores.empty:
             col_dia_encontrada = None
-            # Se incluye 'dia_de_la_semana' acorde a la estructura de la vista en Supabase[cite: 2, 7]
             for c in ["dia_de_la_semana", "dia", "dia_semana", "semana_dia"]:
                 if c in df_factores.columns:
                     col_dia_encontrada = c
@@ -121,7 +120,15 @@ def mostrar_proyecciones():
 
     # 4. Generar tabla horizontal de proyecciones por cada producto
     for producto in productos:
-        st.subheader(f"⛽ Producto: {producto}")
+        # Definir color según el tipo de producto solicitado
+        if producto == "Regular":
+            color_Hex = "#2e7d32" # Verde
+        elif producto == "Premium":
+            color_Hex = "#d84315" # Naranja obscuro
+        else:
+            color_Hex = "#424242" # Gris obscuro
+
+        st.markdown(f"<h3 style='color: {color_Hex};'>⛽ Producto: {producto}</h3>", unsafe_allow_html=True)
 
         # Obtener inventario registrado hoy para el producto
         inv_inicial_hoy = 0.0
@@ -192,15 +199,16 @@ def mostrar_proyecciones():
 
         df_proyeccion = pd.DataFrame(data_dict)
 
-        # Configuración de columnas con NumberColumn para asegurar separador de miles y formato decimal
+        # Configuración de columnas con NumberColumn para asegurar separador de miles y formato decimal exacto
         column_config = {
             "Concepto": st.column_config.TextColumn("Concepto", width="medium")
         }
         for idx, fecha_fmt in enumerate(fechas_cols):
-            # Fila 3 corresponde a D/S (índice 3), la cual lleva 1 decimal (0.0). Las demás llevan enteros con separador de millares.
+            # Fila 3 corresponde a D/S (índice 3), la cual lleva 1 decimal (0.0). Las demás llevan enteros con separador de millares (",").
             column_config[fecha_fmt] = st.column_config.NumberColumn(
                 fecha_fmt,
-                format="%.1f" if idx == 3 else "%d"
+                format="%.1f" if idx == 3 else "%,",
+                help="Días de Inventario (D/S)" if idx == 3 else "Volumen en Litros"
             )
 
         # Renderizado del DataFrame con Streamlit en formato horizontal
