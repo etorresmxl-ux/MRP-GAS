@@ -4,6 +4,7 @@ from datetime import date
 import database as db
 from servicios import formato
 
+
 def mostrar_inventarios():
     st.header("📋 Consulta de Inventarios")
 
@@ -87,30 +88,7 @@ def mostrar_inventarios():
     df_resultado["Premium"] = df_resultado["Premium"].astype(int)
     df_resultado["Diesel"] = df_resultado["Diesel"].astype(int)
 
-    # Estilos generales seguros para la tabla
     formato.aplicar_estilos_tabla()
-
-    # Estilos CSS locales y exclusivos para la tabla de inventarios (Columnas Regular, Premium y Diesel)
-    st.markdown(
-        """
-        <style>
-        /* Estilo exclusivo para los encabezados de la tabla en inventarios */
-        div[data-testid="stDataFrame"] thead th:nth-child(4) {
-            background-color: #2e7d32 !important;
-            color: white !important;
-        }
-        div[data-testid="stDataFrame"] thead th:nth-child(5) {
-            background-color: #d84315 !important;
-            color: white !important;
-        }
-        div[data-testid="stDataFrame"] thead th:nth-child(6) {
-            background-color: #757575 !important;
-            color: white !important;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
 
     columnas_texto = ["id_estacion", "nombre", "plaza"]
     column_config = formato.generar_column_config(df_resultado, columnas_texto=columnas_texto)
@@ -118,11 +96,9 @@ def mostrar_inventarios():
     column_config["id_estacion"] = st.column_config.TextColumn("ID", width="small")
     column_config["nombre"] = st.column_config.TextColumn("Estación", width="medium")
     column_config["plaza"] = st.column_config.TextColumn("Plaza", width="medium")
-    column_config["Regular"] = st.column_config.TextColumn("Regular", width="small")
-    column_config["Premium"] = st.column_config.TextColumn("Premium", width="small")
-    column_config["Diesel"] = st.column_config.TextColumn("Diesel", width="small")
 
-    # Formateo de números con separadores de miles
+    # En Streamlit, NumberColumn con format no fuerza separador de miles como se espera;
+    # por eso se aplica el formato directamente con Pandas Styler.
     df_formateado = formato.formatear_dataframe_numero(df_resultado, ["Regular", "Premium", "Diesel"])
 
     st.dataframe(
