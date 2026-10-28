@@ -1,149 +1,101 @@
-import pandas as pd
-import database as db
-
-# =========================================================
-# 1. ESTACIONES
-# =========================================================
-def limpiar_y_normalizar_estaciones(df):
-    """Limpia y normaliza el DataFrame de estaciones."""
-    df.columns = df.columns.str.strip().str.lower()
+# ---------------------------------------------------------
+# SECCIÓN 4: IMPORTADOR MASIVO EN 3 PESTAÑAS
+# ---------------------------------------------------------
+elif menu == "Importador":
+    st.header("📁 Módulo de Importación Masiva")
+    st.write("Sube tus archivos de Excel (`.xlsx`) para verificar los datos antes de guardarlos en Supabase.")
     
-    columnas_requeridas = ['id_estacion', 'nombre', 'plaza', 'tad']
-    for col in columnas_requeridas:
-        if col not in df.columns:
-            raise ValueError(f"Falta la columna obligatoria en el Excel: {col}")
-            
-    df['id_estacion'] = df['id_estacion'].astype(str).str.strip().str.upper()
-    df['nombre'] = df['nombre'].astype(str).str.strip()
-    df['plaza'] = df['plaza'].astype(str).str.strip().fillna('')
-    df['tad'] = df['tad'].astype(str).str.strip().fillna('')
+    # Separación por 3 pestañas independientes
+    tab_estaciones, tab_inventarios, tab_ventas = st.tabs(["📍 Estaciones", "📦 Inventarios", "💰 Ventas"])
     
-    df = df.drop_duplicates(subset=['id_estacion'], keep='last')
-    return df
-
-def procesar_importacion_estaciones(archivo_subido):
-    try:
-        df_raw = pd.read_excel(archivo_subido)
-        df_limpio = limpiar_y_normalizar_estaciones(df_raw)
+    # -----------------------------------------------------
+    # PESTAÑA 1: ESTACIONES
+    # -----------------------------------------------------
+    with tab_estaciones:
+        st.subheader("Importador de Estaciones")
+        st.info("Columnas obligatorias: `id_estacion`, `nombre`, `plaza`, `tad`")
         
-        exitos = 0
-        errores = 0
-        ultimo_error = ""
-        
-        for _, row in df_limpio.iterrows():
+        archivo_est = st.file_uploader("Subir Excel de Estaciones", type=["xlsx"], key="up_estaciones")
+        if archivo_est is not None:
             try:
-                db.insertar_estacion(
-                    id_estacion=row['id_estacion'],
-                    nombre=row['nombre'],
-                    plaza=row['plaza'],
-                    tad=row['tad']
-                )
-                exitos += 1
-            except Exception as e:
-                errores += 1
-                ultimo_error = str(e)
+                df_limpio = importador.limpiar_y_normalizar_estaciones(pd.read_excel(archivo_est))
                 
-        if errores > 0 and exitos == 0:
-            return False, f"Fallaron todos los registros. Último error: {ultimo_error}", errores, df_limpio
-            
-        return True, exitos, errores, df_limpio
-    except Exception as e:
-        return False, str(e), 0, None
+                # Inspección de datos
+                st.markdown("### 📊 Confirmación de Datos a Registrar")
+                c1, c2 = st.columns(2)
+                c1.metric("Total Registros Únicos", len(df_limpio))
+                c2.metric("Plazas Detectadas", df_limpio['plaza'].nunique())
+                
+                st.dataframe(df_limpio, use_container_width=True)
+                
+                if st.button("Confirmar y Guardar Estaciones", key="btn_estaciones"):
+                    exito, res_exitos, res_errores, _ = importador.procesar_importacion_estaciones(archivo_est)
+                    if exito:
+                        st.success(f"¡Éxito! Registros guardados: {res_exitos}. Errores/Omitidos: {res_errores}")
+                        st.rerun()
+                    else:
+                        st.error(f"Error al procesar: {res_exitos}")
+            except Exception as e:
+                st.error(f"Error en la estructura del Excel: {e}")
 
-
-# =========================================================
-# 2. INVENTARIOS
-# =========================================================
-def limpiar_y_normalizar_inventarios(df):
-    """Limpia y normaliza el DataFrame de inventarios."""
-    df.columns = df.columns.str.strip().str.lower()
-    
-    columnas_requeridas = ['id_estacion', 'fecha', 'producto', 'volumen']
-    for col in columnas_requeridas:
-        if col not in df.columns:
-            raise ValueError(f"Falta la columna obligatoria en el Excel: {col}")
-            
-    df['id_estacion'] = df['id_estacion'].astype(str).str.strip().str.upper()
-    df['fecha'] = pd.to_datetime(df['fecha']).dt.strftime('%Y-%m-%d')
-    df['producto'] = df['producto'].astype(str).str.strip().str.capitalize()
-    df['volumen'] = pd.to_numeric(df['volumen'], errors='coerce').fillna(0.0)
-    
-    return df
-
-def procesar_importacion_inventarios(archivo_subido):
-    try:
-        df_raw = pd.read_excel(archivo_subido)
-        df_limpio = limpiar_y_normalizar_inventarios(df_raw)
+    # -----------------------------------------------------
+    # PESTAÑA 2: INVENTARIOS
+    # -----------------------------------------------------
+    with tab_inventarios:
+        st.subheader("Importador de Inventarios")
+        st.info("Columnas obligatorias: `id_estacion`, `fecha`, `producto`, `volumen`")
         
-        exitos = 0
-        errores = 0
-        ultimo_error = ""
-        
-        for _, row in df_limpio.iterrows():
+        archivo_inv = st.file_uploader("Subir Excel de Inventarios", type=["xlsx"], key="up_inventarios")
+        if archivo_inv is not None:
             try:
-                db.insertar_inventario(
-                    id_estacion=row['id_estacion'],
-                    fecha=row['fecha'],
-                    producto=row['producto'],
-                    volumen=float(row['volumen'])
-                )
-                exitos += 1
-            except Exception as e:
-                errores += 1
-                ultimo_error = str(e)
+                df_limpio = importador.limpiar_y_normalizar_inventarios(pd.read_excel(archivo_inv))
                 
-        if errores > 0 and exitos == 0:
-            return False, f"Fallaron todos los registros. Último error: {ultimo_error}", errores, df_limpio
-            
-        return True, exitos, errores, df_limpio
-    except Exception as e:
-        return False, str(e), 0, None
+                # Inspección de datos
+                st.markdown("### 📊 Confirmación de Datos a Registrar")
+                c1, c2, c3 = st.columns(3)
+                c1.metric("Total Registros", len(df_limpio))
+                c2.metric("Volumen Total", f"{df_limpio['volumen'].sum():,.2f} Lts")
+                c3.metric("Productos", ", ".join(df_limpio['producto'].unique()))
+                
+                st.dataframe(df_limpio, use_container_width=True)
+                
+                if st.button("Confirmar y Guardar Inventarios", key="btn_inventarios"):
+                    exito, res_exitos, res_errores, _ = importador.procesar_importacion_inventarios(archivo_inv)
+                    if exito:
+                        st.success(f"¡Éxito! Registros guardados: {res_exitos}. Errores/Omitidos: {res_errores}")
+                        st.rerun()
+                    else:
+                        st.error(f"Error al procesar: {res_exitos}")
+            except Exception as e:
+                st.error(f"Error en la estructura del Excel: {e}")
 
-
-# =========================================================
-# 3. VENTAS
-# =========================================================
-def limpiar_y_normalizar_ventas(df):
-    """Limpia y normaliza el DataFrame de ventas."""
-    df.columns = df.columns.str.strip().str.lower()
-    
-    columnas_requeridas = ['id_estacion', 'fecha', 'producto', 'volumen']
-    for col in columnas_requeridas:
-        if col not in df.columns:
-            raise ValueError(f"Falta la columna obligatoria en el Excel: {col}")
-            
-    df['id_estacion'] = df['id_estacion'].astype(str).str.strip().str.upper()
-    df['fecha'] = pd.to_datetime(df['fecha']).dt.strftime('%Y-%m-%d')
-    df['producto'] = df['producto'].astype(str).str.strip().str.capitalize()
-    df['volumen'] = pd.to_numeric(df['volumen'], errors='coerce').fillna(0.0)
-    
-    return df
-
-def procesar_importacion_ventas(archivo_subido):
-    try:
-        df_raw = pd.read_excel(archivo_subido)
-        df_limpio = limpiar_y_normalizar_ventas(df_raw)
+    # -----------------------------------------------------
+    # PESTAÑA 3: VENTAS
+    # -----------------------------------------------------
+    with tab_ventas:
+        st.subheader("Importador de Ventas")
+        st.info("Columnas obligatorias: `id_estacion`, `fecha`, `producto`, `volumen`")
         
-        exitos = 0
-        errores = 0
-        ultimo_error = ""
-        
-        for _, row in df_limpio.iterrows():
+        archivo_ven = st.file_uploader("Subir Excel de Ventas", type=["xlsx"], key="up_ventas")
+        if archivo_ven is not None:
             try:
-                db.insertar_venta(
-                    id_estacion=row['id_estacion'],
-                    fecha=row['fecha'],
-                    producto=row['producto'],
-                    volumen=float(row['volumen'])
-                )
-                exitos += 1
-            except Exception as e:
-                errores += 1
-                ultimo_error = str(e)
+                df_limpio = importador.limpiar_y_normalizar_ventas(pd.read_excel(archivo_ven))
                 
-        if errores > 0 and exitos == 0:
-            return False, f"Fallaron todos los registros. Último error: {ultimo_error}", errores, df_limpio
-            
-        return True, exitos, errores, df_limpio
-    except Exception as e:
-        return False, str(e), 0, None
+                # Inspección de datos
+                st.markdown("### 📊 Confirmación de Datos a Registrar")
+                c1, c2, c3 = st.columns(3)
+                c1.metric("Total Registros", len(df_limpio))
+                c2.metric("Volumen Vendido Total", f"{df_limpio['volumen'].sum():,.2f} Lts")
+                c3.metric("Productos", ", ".join(df_limpio['producto'].unique()))
+                
+                st.dataframe(df_limpio, use_container_width=True)
+                
+                if st.button("Confirmar y Guardar Ventas", key="btn_ventas"):
+                    exito, res_exitos, res_errores, _ = importador.procesar_importacion_ventas(archivo_ven)
+                    if exito:
+                        st.success(f"¡Éxito! Registros guardados: {res_exitos}. Errores/Omitidos: {res_errores}")
+                        st.rerun()
+                    else:
+                        st.error(f"Error al procesar: {res_exitos}")
+            except Exception as e:
+                st.error(f"Error en la estructura del Excel: {e}")
