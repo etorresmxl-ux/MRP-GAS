@@ -19,7 +19,7 @@ def formatear_fecha_corta(fecha):
 
 def normalizar_dia_semana(valor_dia):
     """
-    Mapea nombres largos, con acentos o abreviaturas de días a un índice entero (0 = Lunes, 6 = Domingo).
+    Mapea nombres largos, con acentos o abreviaturas de días de la semana a un índice entero (0 = Lunes, 6 = Domingo).
     """
     if not isinstance(valor_dia, str):
         return None
@@ -88,11 +88,10 @@ def mostrar_proyecciones():
                 (df_inv["fecha"] == fecha_hoy)
             ]
 
-    # Obtener la venta proyectada y factores de estacionalidad desde calculos.py
+    # Obtener factores y ventas por día de la semana desde calculos.py
     try:
         df_factores = calculos.obtener_factores_estacionalidad_dia()
         if not df_factores.empty:
-            # Identificar la columna de día (puede llamarse 'dia', 'dia_semana', etc.)
             col_dia_encontrada = None
             for c in ["dia", "dia_semana", "semana_dia"]:
                 if c in df_factores.columns:
@@ -101,10 +100,6 @@ def mostrar_proyecciones():
             
             if col_dia_encontrada:
                 df_factores["dia_index"] = df_factores[col_dia_encontrada].apply(normalizar_dia_semana)
-            else:
-                # Si no existe columna de día explícita, intentamos buscar si hay columna fecha
-                if "fecha" in df_factores.columns:
-                    df_factores["fecha_dt"] = pd.to_datetime(df_factores["fecha"]).dt.date
         else:
             df_factores = pd.DataFrame()
     except Exception:
@@ -129,17 +124,17 @@ def mostrar_proyecciones():
         st.subheader(f"⛽ Producto: {producto}")
 
         # Obtener inventario registrado hoy para el producto
-        inv_inicial_hoy = 0
+        inv_inicial_hoy = 0.0
         if not df_inv_hoy.empty and "producto" in df_inv_hoy.columns:
             match_prod = df_inv_hoy[df_inv_hoy["producto"].str.capitalize() == producto]
             if not match_prod.empty:
-                inv_inicial_hoy = int(match_prod["volumen"].values[0])
+                inv_inicial_hoy = float(match_prod["volumen"].values[0])
 
         fechas_cols = []
-        inv_iniciales = []
-        ventas_est = []
-        inv_finales = []
-        dias_inventario = []
+        inv_iniciales_fmt = []
+        ventas_est_fmt = []
+        inv_finales_fmt = []
+        dias_inventario_fmt = []
 
         inv_actual = inv_inicial_hoy
 
@@ -149,77 +144,62 @@ def mostrar_proyecciones():
             fecha_fmt = formatear_fecha_corta(fecha_dia)
             fechas_cols.append(fecha_fmt)
 
-            # Consultar Venta Estimada haciendo match por Estación, Producto y Día de la Semana
-            venta_est = 0
+            # Consultar Venta Estimada real según el día de la semana correspondiente
+            venta_est = 0.0
             if not df_factores.empty:
-                # Filtrar por estación y producto
                 mask = (
                     (df_factores["id_estacion"] == id_estacion_sel) &
                     (df_factores["producto"].str.capitalize() == producto)
                 )
                 
-                # Si tenemos índice de día normalizado, filtramos por el weekday correspondiente (0-6)
                 if "dia_index" in df_factores.columns:
                     match_venta = df_factores[mask & (df_factores["dia_index"] == fecha_dia.weekday())]
-                elif "fecha_dt" in df_factores.columns:
-                    match_venta = df_factores[mask & (df_factores["fecha_dt"] == fecha_dia)]
-                else:
-                    match_venta = pd.DataFrame()
-
-                if not match_venta.empty:
-                    # Buscar la columna de venta proyectada
-                    for col_val in ["venta_proyectada_dia", "vp_dia", "vdp_ponderada", "volumen"]:
-                        if col_val in match_venta.columns:
-                            val = match_venta[col_val].values[0]
-                            if pd.notna(val):
-                                venta_est = int(val)
-                                break
-                
-                # Fallback general si no encontró por día específico pero existe un VDP ponderado general
-                if venta_est == 0:
-                    match_gen = df_factores[mask]
-                    if not match_gen.empty and "vdp_ponderada" in match_gen.columns:
-                        val_gen = match_gen["vdp_ponderada"].values[0]
-                        if pd.notna(val_gen):
-                            venta_est = int(val_gen)
+                    if not match_venta.empty:
+                        for col_val in ["venta_proyectada_dia", "vp_dia", "vdp_ponderada", "volumen"]:
+                            if col_val in match_venta.columns:
+                                val = match_venta[col_val].values[0]
+                                if pd.notna(val):
+                                    venta_est = float(val)
+                                    break
 
             # CÁLCULOS PRINCIPALES
             inv_inicial = inv_actual
             inv_final = inv_inicial - venta_est
             
-            # Cálculo D/S (Días de Inventario según el inventario final y la venta estimada)
-            ds = int(inv_final / venta_est) if venta_est > 0 else 0
+            # Cálculo D/S (Días de Inventario con un decimal: 0.0)
+            ds = (inv_final / venta_est) if venta_est > 0 else 0.0
 
-            inv_iniciales.append(int(inv_inicial))
-            ventas_est.append(int(venta_est))
-            inv_finales.append(int(inv_final))
-            dias_inventario.append(int(ds))
+            # Guardar valores con formato de separador de millares y decimales solicitados
+            inv_iniciales_fmt.append(f"{int(round(inv_inicial)):,}")
+            ventas_est_fmt.append(f"{int(round(venta_est)):,}")
+            inv_finales_fmt.append(f"{int(round(inv_final)):,}")
+            dias_inventario_fmt.append(f"{ds:.1f}")
 
             # El inventario final del día actual se vuelve el inicial del día siguiente
             inv_actual = inv_final
 
-        # Construir estructura horizontal (Concepto en vertical, fechas en columnas)
+        # Construir estructura horizontal (Concepto en vertical, fechas en columnas de texto)
         data_dict = {
             "Concepto": ["Inventario Inicial", "Venta Estimada", "Inventario Final", "D/S"]
         }
         for idx, fecha_fmt in enumerate(fechas_cols):
             data_dict[fecha_fmt] = [
-                inv_iniciales[idx],
-                ventas_est[idx],
-                inv_finales[idx],
-                dias_inventario[idx]
+                inv_iniciales_fmt[idx],
+                ventas_est_fmt[idx],
+                inv_finales_fmt[idx],
+                dias_inventario_fmt[idx]
             ]
 
         df_proyeccion = pd.DataFrame(data_dict)
 
-        # Configuración de columnas dinámicas
+        # Configuración de columnas de texto para respetar alineación y formato visual exacto
         column_config = {
             "Concepto": st.column_config.TextColumn("Concepto", width="medium")
         }
         for fecha_fmt in fechas_cols:
-            column_config[fecha_fmt] = st.column_config.NumberColumn(
+            column_config[fecha_fmt] = st.column_config.TextColumn(
                 fecha_fmt,
-                format="%d"
+                width="small"
             )
 
         # Renderizado del DataFrame con Streamlit en formato horizontal
