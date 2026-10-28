@@ -35,7 +35,6 @@ def normalizar_dia_semana(valor_dia):
     }
     return mapa.get(val, None)
 
-
 def mostrar_proyecciones():
     st.header("📈 Proyección e Integridad de Inventarios (14 Días)")
 
@@ -60,7 +59,7 @@ def mostrar_proyecciones():
 
     # Filtrar estaciones por la plaza seleccionada
     df_estaciones_plaza = df_estaciones[df_estaciones["plaza"] == plaza_seleccionada]
-    
+
     with col_estacion:
         estaciones_dict = dict(zip(df_estaciones_plaza["id_estacion"], df_estaciones_plaza["nombre"]))
         id_estacion_sel = st.selectbox(
@@ -78,7 +77,7 @@ def mostrar_proyecciones():
     fecha_hoy = date.today()
     datos_inventarios = db.obtener_inventarios()
     df_inv_hoy = pd.DataFrame()
-    
+
     if datos_inventarios:
         df_inv = pd.DataFrame(datos_inventarios)
         if "fecha" in df_inv.columns:
@@ -93,7 +92,8 @@ def mostrar_proyecciones():
         df_factores = calculos.obtener_factores_estacionalidad_dia()
         if not df_factores.empty:
             col_dia_encontrada = None
-            for c in ["dia", "dia_semana", "semana_dia"]:
+            # Se incluye 'dia_de_la_semana' acorde a la estructura de la vista en Supabase[cite: 2, 7]
+            for c in ["dia_de_la_semana", "dia", "dia_semana", "semana_dia"]:
                 if c in df_factores.columns:
                     col_dia_encontrada = c
                     break
