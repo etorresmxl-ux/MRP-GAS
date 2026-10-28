@@ -1,137 +1,59 @@
 import streamlit as st
 import pandas as pd
-from datetime import date
 import database as db
+from servicios import formato
 
 def mostrar_inventarios():
     st.header("📋 Consulta de Inventarios")
 
-    # 1. Obtener información de la base de datos
-    datos_estaciones = db.obtener_estaciones()
+    # 1. Obtener datos de inventarios y estaciones desde la BD
     datos_inventarios = db.obtener_inventarios()
+    datos_estaciones = db.obtener_estaciones()
 
-    if not datos_estaciones:
-        st.warning("No hay estaciones registradas en la base de datos.")
+    if not datos_inventarios:
+        st.info("No hay registros de inventario disponibles en la base de datos.")
         return
 
-    df_estaciones = pd.DataFrame(datos_estaciones)
+    df_inv = pd.DataFrame(datos_inventarios)
+    
+    # Asegurar formato de fecha legible si existe
+    if "fecha" in df_inv.columns:
+        df_inv["fecha"] = pd.to_datetime(df_inv["fecha"]).dt.strftime("%Y-%m-%d")
 
-    # 2. Filtros principales: Fecha y Plaza
-    col_fecha, col_plaza = st.columns(2)
-
-    with col_fecha:
-        fecha_seleccionada = st.date_input(
-            "Selecciona la fecha:",
-            value=date.today(),
-            key="filtro_fecha_inventarios"
-        )
-
-    with col_plaza:
-        plazas_disponibles = ["Todas"] + sorted(list(df_estaciones["plaza"].unique()))
-        plaza_seleccionada = st.selectbox(
-            "Selecciona la plaza:",
-            options=plazas_disponibles,
-            key="filtro_plaza_inventarios"
-        )
-
-    # 3. Filtrar estaciones según la plaza seleccionada
-    if plaza_seleccionada != "Todas":
-        df_estaciones_filtradas = df_estaciones[df_estaciones["plaza"] == plaza_seleccionada]
-    else:
-        df_estaciones_filtradas = df_estaciones.copy()
-
-    if df_estaciones_filtradas.empty:
-        st.info("No hay estaciones registradas para la plaza seleccionada.")
-        return
-
-    # 4. Procesar y filtrar datos de inventario si existen
-    if datos_inventarios:
-        df_inventarios = pd.DataFrame(datos_inventarios)
+    # 2. Filtros opcionales por Estación / Plaza
+    if datos_estaciones:
+        df_estaciones = pd.DataFrame(datos_estaciones)
         
-        # Asegurar formato correcto de fecha para el filtro
-        df_inventarios["fecha"] = pd.to_datetime(df_inventarios["fecha"]).dt.date
+        if "id_estacion" in df_inv.columns and "id_estacion" in df_estaciones.columns:
+            df_inv = pd.merge(df_inv, df_estaciones[["id_estacion", "nombre", "plaza"]], on="id_estacion", how="left")
 
-        # Filtrar inventarios por fecha
-        df_inv_filtrado = df_inventarios[df_inventarios["fecha"] == fecha_seleccionada]
+        col1, col2 = st.columns(2)
+        with col1:
+            plazas = ["Todas"] + sorted(list(df_inv["plaza"].dropna().unique())) if "plaza" in df_inv.columns else ["Todas"]
+            plaza_sel = st.selectbox("Filtrar por Plaza:", options=plazas, key="filtro_plaza_inv")
+            if plaza_sel != "Todas" and "plaza" in df_inv.columns:
+                df_inv = df_inv[df_inv["plaza"] == plaza_sel]
 
-        if not df_inv_filtrado.empty:
-            # Pivotar el producto en columnas (Regular, Premium, Diesel)
-            df_pivot = df_inv_filtrado.pivot_table(
-                index="id_estacion",
-                columns="producto",
-                values="volumen",
-                aggfunc="sum",
-                fill_value=0
-            ).reset_index()
-            
-            # Unir las estaciones filtradas por plaza con el inventario
-            df_resultado = pd.merge(
-                df_estaciones_filtradas[["id_estacion", "nombre", "plaza"]],
-                df_pivot,
-                on="id_estacion",
-                how="left"
-            ).fillna(0)
-        else:
-            # Si no hay registros en la fecha seleccionada, mostrar inventarios en 0
-            df_resultado = df_estaciones_filtradas[["id_estacion", "nombre", "plaza"]].copy()
-            df_resultado["Regular"] = 0
-            df_resultado["Premium"] = 0
-            df_resultado["Diesel"] = 0
-    else:
-        # Si la tabla de inventarios está completamente vacía
-        df_resultado = df_estaciones_filtradas[["id_estacion", "nombre", "plaza"]].copy()
-        df_resultado["Regular"] = 0
-        df_resultado["Premium"] = 0
-        df_resultado["Diesel"] = 0
+        with col2:
+            productos = ["Todos"] + sorted(list(df_inv["producto"].dropna().unique())) if "producto" in df_inv.columns else ["Todos"]
+            prod_sel = st.selectbox("Filtrar por Producto:", options=productos, key="filtro_prod_inv")
+            if prod_sel != "Todos" and "producto" in df_inv.columns:
+                df_inv = df_inv[df_inv["producto"].str.capitalize() == prod_sel.capitalize()]
 
-    # Asegurar que existan las columnas de combustible requeridas
-    for col in ["Regular", "Premium", "Diesel"]:
-        if col not in df_resultado.columns:
-            df_resultado[col] = 0
+    # 3. Aplicar estilos globales de centrado de encabezados del servicio formato.py
+    formato.aplicar_estilos_tabla()
 
-    # Reordenar columnas exactas requeridas
-    df_resultado = df_resultado[["id_estacion", "nombre", "plaza", "Regular", "Premium", "Diesel"]]
+    # 4. Generar configuración de columnas utilizando el servicio centralizado
+    # Definimos las columnas de texto fijas y dejamos que las numéricas cojan el formato entero por defecto (%d)
+    column_config = formato.generar_column_config(
+        df_inv, 
+        columnas_texto=["id_estacion", "Estacion", "Plaza", "fecha", "producto", "Concepto"]
+    )
 
-    # Convertir volúmenes a enteros
-    df_resultado["Regular"] = df_resultado["Regular"].astype(int)
-    df_resultado["Premium"] = df_resultado["Premium"].astype(int)
-    df_resultado["Diesel"] = df_resultado["Diesel"].astype(int)
-
-    # Estilo CSS para centrar títulos de columnas
-    st.markdown("""
-        <style>
-        [data-testid="stHeaderCell"] {
-            text-align: center !important;
-        }
-        [data-testid="stHeaderCell"] > div {
-            justify-content: center !important;
-        }
-        </style>
-    """, unsafe_allow_html=True)
-
-    # 5. Renderizado de la tabla con configuración de columnas
+    # 5. Renderizar tabla con la configuración aplicada
     st.dataframe(
-        df_resultado,
+        df_inv,
         use_container_width=True,
         hide_index=True,
-        column_config={
-            "id_estacion": st.column_config.TextColumn("ID"),
-            "nombre": st.column_config.TextColumn("Estacion"),
-            "plaza": st.column_config.TextColumn("Plaza"),
-            "Regular": st.column_config.NumberColumn(
-                "Regular",
-                format="%d",
-                help="Volumen Regular en Litros"
-            ),
-            "Premium": st.column_config.NumberColumn(
-                "Premium",
-                format="%d",
-                help="Volumen Premium en Litros"
-            ),
-            "Diesel": st.column_config.NumberColumn(
-                "Diesel",
-                format="%d",
-                help="Volumen Diesel en Litros"
-            ),
-        }
+        column_config=column_config
     )
