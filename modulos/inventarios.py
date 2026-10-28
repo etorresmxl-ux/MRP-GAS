@@ -90,6 +90,26 @@ def mostrar_inventarios():
 
     formato.aplicar_estilos_tabla()
 
+    st.markdown(
+        """
+        <style>
+        div[data-testid="stDataFrame"] thead th:nth-child(4) {
+            color: #2e7d32 !important;
+            font-weight: 700 !important;
+        }
+        div[data-testid="stDataFrame"] thead th:nth-child(5) {
+            color: #b85c00 !important;
+            font-weight: 700 !important;
+        }
+        div[data-testid="stDataFrame"] thead th:nth-child(6) {
+            color: #4b4b4b !important;
+            font-weight: 700 !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
     columnas_texto = ["id_estacion", "nombre", "plaza"]
     column_config = formato.generar_column_config(df_resultado, columnas_texto=columnas_texto)
 
