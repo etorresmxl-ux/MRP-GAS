@@ -14,11 +14,20 @@ st.set_page_config(
 
 st.title("⛽ Sistema de Gestión de Combustible")
 
-# Menú lateral de navegación con todas las opciones
-menu = st.sidebar.selectbox(
-    "Navegación",
-    ["Estaciones", "Inventarios", "Ventas", "Importador"]
+# ---------------------------------------------------------
+# NAVEGACIÓN LATERAL COMPLETAMENTE DESPLEGADA
+# ---------------------------------------------------------
+st.sidebar.markdown("### 🧭 Navegación")
+
+# Usamos st.sidebar.radio para mostrar las opciones directamente en la barra lateral
+menu = st.sidebar.radio(
+    "Selecciona una sección",
+    ["Estaciones", "Inventarios", "Ventas", "Importador"],
+    label_visibility="collapsed"
 )
+
+st.sidebar.markdown("---")
+st.sidebar.info("Sistema conectado a Supabase 🚀")
 
 # ---------------------------------------------------------
 # SECCIÓN 1: ESTACIONES
@@ -47,7 +56,7 @@ elif menu == "Ventas":
 # ---------------------------------------------------------
 elif menu == "Importador":
     st.header("📁 Módulo de Importación Masiva")
-    st.write("Sube tus archivos de Excel (.xlsx) para verificar los datos antes de guardarlos en Supabase.")
+    st.write("Sube tus archivos de Excel (`.xlsx`) para verificar los datos antes de guardarlos en Supabase.")
     
     # Separación por 3 pestañas independientes
     tab_estaciones, tab_inventarios, tab_ventas = st.tabs(["📍 Estaciones", "📦 Inventarios", "💰 Ventas"])
