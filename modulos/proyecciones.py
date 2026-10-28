@@ -199,15 +199,15 @@ def mostrar_proyecciones():
 
         df_proyeccion = pd.DataFrame(data_dict)
 
-        # Configuración de columnas con NumberColumn para asegurar separador de miles y formato decimal exacto
+        # Configuración de columnas con NumberColumn para asegurar formato decimal exacto
         column_config = {
             "Concepto": st.column_config.TextColumn("Concepto", width="medium")
         }
         for idx, fecha_fmt in enumerate(fechas_cols):
-            # Fila 3 corresponde a D/S (índice 3), la cual lleva 1 decimal (0.0). Las demás llevan enteros con separador de millares (",").
+            # Fila 3 corresponde a D/S (índice 3), la cual lleva 1 decimal (0.0). Las demás llevan enteros.
             column_config[fecha_fmt] = st.column_config.NumberColumn(
                 fecha_fmt,
-                format="%.1f" if idx == 3 else "%,",
+                format="%.1f" if idx == 3 else "%d",
                 help="Días de Inventario (D/S)" if idx == 3 else "Volumen en Litros"
             )
 
