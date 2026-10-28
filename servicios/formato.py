@@ -74,3 +74,15 @@ def formatear_dataframe_numero(df, columnas=None, columnas_decimales=None):
             formato_por_columna[col] = "{:,.0f}"
 
     return df.style.format(formato_por_columna)
+
+
+def formatear_numero_para_texto(valor, decimales=0):
+    """Convierte valores numéricos a texto con separador de miles y decimales."""
+    try:
+        numero = float(valor)
+    except (TypeError, ValueError):
+        return "0" if pd.isna(valor) else str(valor)
+
+    if decimales == 0:
+        return f"{numero:,.0f}"
+    return f"{numero:,.1f}"

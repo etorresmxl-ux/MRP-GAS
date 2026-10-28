@@ -49,7 +49,6 @@ def mostrar_proyecciones():
 
     df_estaciones = pd.DataFrame(datos_estaciones)
 
-    # 2. Filtros de Plaza y Estación
     col_plaza, col_estacion = st.columns(2)
 
     with col_plaza:
@@ -60,7 +59,6 @@ def mostrar_proyecciones():
             key="filtro_plaza_proyecciones"
         )
 
-    # Filtrar estaciones por la plaza seleccionada
     df_estaciones_plaza = df_estaciones[df_estaciones["plaza"] == plaza_seleccionada]
 
     with col_estacion:
@@ -76,7 +74,6 @@ def mostrar_proyecciones():
         st.info("Por favor selecciona una estación.")
         return
 
-    # 3. Obtener Inventario Inicial del día de hoy desde la BD
     fecha_hoy = date.today()
     datos_inventarios = db.obtener_inventarios()
     df_inv_hoy = pd.DataFrame()
@@ -90,7 +87,6 @@ def mostrar_proyecciones():
                 (df_inv["fecha"] == fecha_hoy)
             ]
 
-    # Obtener factores de estacionalidad y venta proyectada desde calculos.py
     try:
         df_factores = calculos.obtener_factores_estacionalidad_dia()
         if not df_factores.empty:
@@ -109,22 +105,18 @@ def mostrar_proyecciones():
 
     productos = ["Regular", "Premium", "Diesel"]
 
-    # Estilos globales para la tabla de proyecciones
     formato.aplicar_estilos_tabla()
 
-    # 4. Generar tabla horizontal de proyecciones por cada producto
     for producto in productos:
-        # Definir color según el tipo de producto solicitado
         if producto == "Regular":
-            color_Hex = "#2e7d32"  # Verde
+            color_Hex = "#2e7d32"
         elif producto == "Premium":
-            color_Hex = "#d84315"  # Naranja obscuro
+            color_Hex = "#d84315"
         else:
-            color_Hex = "#424242"  # Gris obscuro
+            color_Hex = "#424242"
 
         st.markdown(f"<h3 style='color: {color_Hex};'>⛽ Producto: {producto}</h3>", unsafe_allow_html=True)
 
-        # Obtener inventario registrado hoy para el producto
         inv_inicial_hoy = 0.0
         if not df_inv_hoy.empty and "producto" in df_inv_hoy.columns:
             match_prod = df_inv_hoy[df_inv_hoy["producto"].str.capitalize() == producto]
@@ -139,13 +131,11 @@ def mostrar_proyecciones():
 
         inv_actual = inv_inicial_hoy
 
-        # Iterar 14 días (Hoy + 13 días proyectados)
         for i in range(14):
             fecha_dia = fecha_hoy + timedelta(days=i)
             fecha_fmt = formatear_fecha_corta(fecha_dia)
             fechas_cols.append(fecha_fmt)
 
-            # Consultar Venta Estimada (Venta Proyectada del Día cruzada con estacionalidad)
             venta_estimada_dia = 0.0
             if not df_factores.empty:
                 mask = (
@@ -164,11 +154,8 @@ def mostrar_proyecciones():
                         if pd.notna(val):
                             venta_estimada_dia = float(val)
 
-            # CÁLCULOS PRINCIPALES (Numéricos puros)
             inv_inicial = inv_actual
             inv_final = inv_inicial - venta_estimada_dia
-
-            # Cálculo D/S
             ds = (inv_final / venta_estimada_dia) if venta_estimada_dia > 0 else 0.0
 
             inv_iniciales.append(round(inv_inicial, 2))
@@ -176,10 +163,8 @@ def mostrar_proyecciones():
             inv_finales.append(round(inv_final, 2))
             dias_inventario.append(round(ds, 1))
 
-            # El inventario final del día actual se vuelve el inicial del día siguiente
             inv_actual = inv_final
 
-        # Construir estructura horizontal con datos numéricos limpios
         data_dict = {
             "Concepto": ["Inventario Inicial", "Venta Estimada", "Inventario Final", "D/S"]
         }
@@ -193,28 +178,19 @@ def mostrar_proyecciones():
 
         df_proyeccion = pd.DataFrame(data_dict)
 
-        # Prepara el Styler para que los números muestren miles y decimales
         columnas_numericas = [col for col in df_proyeccion.columns if col != "Concepto"]
-        df_styled = formato.formatear_dataframe_numero(
-            df_proyeccion,
-            columnas=columnas_numericas,
-            columnas_decimales=[columnas_numericas[-1]]
-        )
+        for col in columnas_numericas:
+            decimales = 1 if col == columnas_numericas[-1] else 0
+            df_proyeccion[col] = df_proyeccion[col].apply(lambda v: formato.formatear_numero_para_texto(v, decimales))
 
-        # Configuración de columnas con NumberColumn para mantener layout legible
         column_config = {
             "Concepto": st.column_config.TextColumn("Concepto", width="medium")
         }
         for col in columnas_numericas:
-            column_config[col] = st.column_config.NumberColumn(
-                col,
-                format="%.1f" if col == columnas_numericas[-1] else "%d",
-                help="Días de Inventario (D/S)" if col == columnas_numericas[-1] else "Volumen en Litros"
-            )
+            column_config[col] = st.column_config.TextColumn(col, width="small")
 
-        # Renderizado del DataFrame con Streamlit en formato horizontal
         st.dataframe(
-            df_styled,
+            df_proyeccion,
             use_container_width=True,
             hide_index=True,
             column_config=column_config
