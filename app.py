@@ -3,7 +3,6 @@ import pandas as pd
 from datetime import date
 import database as db
 from modulos import importador, inventarios, proyecciones
-from modulos import estaciones
 from servicios import calculos, plantilla  # <-- Importar el servicio de estilos globales
 from streamlit_option_menu import option_menu
 
@@ -34,8 +33,8 @@ with st.spinner("Cargando y procesando modelos de consumo (12 semanas)..."):
 with st.sidebar:
     menu = option_menu(
         menu_title="Navegación",
-        options=["Estaciones", "Inventarios", "Proyecciones", "Ventas", "Importador", "Indicadores (Prueba)"],
-        icons=["geo-alt", "clipboard-data", "graph-up", "bar-chart", "cloud-upload", "cpu"],
+        options=["Inventarios", "Proyecciones", "Ventas", "Importador", "Indicadores (Prueba)"],
+        icons=["clipboard-data", "graph-up", "bar-chart", "cloud-upload", "cpu"],
         menu_icon="fuel-pump",
         default_index=0,
         styles={
@@ -53,32 +52,26 @@ with st.sidebar:
     )
 
 ### ---------------------------------------------------------
-### SECCIÓN 1: ESTACIONES
+### SECCIÓN 1: INVENTARIOS
 ### ---------------------------------------------------------
-if menu == "Estaciones":
-    estaciones.mostrar_estaciones()
-
-### ---------------------------------------------------------
-### SECCIÓN 2: INVENTARIOS
-### ---------------------------------------------------------
-elif menu == "Inventarios":
+if menu == "Inventarios":
     inventarios.mostrar_inventarios()
 
 ### ---------------------------------------------------------
-### SECCIÓN 3: PROYECCIONES
+### SECCIÓN 2: PROYECCIONES
 ### ---------------------------------------------------------
 elif menu == "Proyecciones":
     proyecciones.mostrar_proyecciones()
 
 ### ---------------------------------------------------------
-### SECCIÓN 4: VENTAS
+### SECCIÓN 3: VENTAS
 ### ---------------------------------------------------------
 elif menu == "Ventas":
     st.header("📊 Módulo de Ventas")
     st.info("Sección en desarrollo.")
 
 ### ---------------------------------------------------------
-### SECCIÓN 5: IMPORTADOR
+### SECCIÓN 4: IMPORTADOR
 ### ---------------------------------------------------------
 elif menu == "Importador":
     importador.mostrar_importador()
