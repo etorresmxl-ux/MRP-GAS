@@ -4,22 +4,21 @@ from datetime import date
 import database as db
 from servicios import formato
 
-
 def mostrar_inventarios():
-    st.header("📋 Consulta de Inventarios")
+    st.header("📋 Consulta y Actualización de Inventarios")
 
     # 1. Obtener información de la base de datos
-    datos_estaciones = db.obtener_estaciones()
+    datos_estaciones_usuario = db.obtener_estaciones_usuario()
     datos_inventarios = db.obtener_inventarios()
 
-    if not datos_estaciones:
-        st.warning("No hay estaciones registradas en la base de datos.")
+    if not datos_estaciones_usuario:
+        st.warning("No hay asignaciones de estaciones y usuarios registradas en la base de datos.")
         return
 
-    df_estaciones = pd.DataFrame(datos_estaciones)
+    df_est_usu = pd.DataFrame(datos_estaciones_usuario)
 
-    # 2. Filtros principales: Fecha y Plaza
-    col_fecha, col_plaza = st.columns(2)
+    # 2. Filtros principales: Fecha y Usuario
+    col_fecha, col_usuario = st.columns(2)
 
     with col_fecha:
         fecha_seleccionada = st.date_input(
@@ -28,23 +27,29 @@ def mostrar_inventarios():
             key="filtro_fecha_inventarios"
         )
 
-    with col_plaza:
-        plazas_disponibles = ["Todas"] + sorted(list(df_estaciones["plaza"].unique()))
-        plaza_seleccionada = st.selectbox(
-            "Selecciona la plaza:",
-            options=plazas_disponibles,
-            key="filtro_plaza_inventarios"
+    with col_usuario:
+        usuarios_disponibles = sorted(list(df_est_usu["usuario"].unique()))
+        usuario_seleccionado = st.selectbox(
+            "Selecciona el usuario:",
+            options=usuarios_disponibles,
+            key="filtro_usuario_inventarios"
         )
 
-    # 3. Filtrar estaciones según la plaza seleccionada
-    if plaza_seleccionada != "Todas":
-        df_estaciones_filtradas = df_estaciones[df_estaciones["plaza"] == plaza_seleccionada]
-    else:
-        df_estaciones_filtradas = df_estaciones.copy()
+    # 3. Filtrar estaciones según el usuario seleccionado
+    df_estaciones_filtradas = df_est_usu[df_est_usu["usuario"] == usuario_seleccionado].copy()
 
     if df_estaciones_filtradas.empty:
-        st.info("No hay estaciones registradas para la plaza seleccionada.")
+        st.info("No hay estaciones registradas para el usuario seleccionado.")
         return
+
+    # Normalizar campos de estaciones si vienen anidados desde la relación de Supabase
+    if "estaciones" in df_estaciones_filtradas.columns:
+        df_estaciones_filtradas["nombre"] = df_estaciones_filtradas["estaciones"].apply(
+            lambda x: x.get("nombre") if isinstance(x, dict) else ""
+        )
+        df_estaciones_filtradas["plaza"] = df_estaciones_filtradas["estaciones"].apply(
+            lambda x: x.get("plaza") if isinstance(x, dict) else ""
+        )
 
     # 4. Procesar y filtrar datos de inventario si existen
     if datos_inventarios:
@@ -90,40 +95,43 @@ def mostrar_inventarios():
 
     formato.aplicar_estilos_tabla()
 
-    st.markdown(
-        """
-        <style>
-        div[data-testid="stDataFrame"] thead th:nth-child(4) {
-            color: #2e7d32 !important;
-            font-weight: 700 !important;
-        }
-        div[data-testid="stDataFrame"] thead th:nth-child(5) {
-            color: #b85c00 !important;
-            font-weight: 700 !important;
-        }
-        div[data-testid="stDataFrame"] thead th:nth-child(6) {
-            color: #4b4b4b !important;
-            font-weight: 700 !important;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
+    column_config = {
+        "id_estacion": st.column_config.TextColumn("ID", width="small", disabled=True),
+        "nombre": st.column_config.TextColumn("Estación", width="medium", disabled=True),
+        "plaza": st.column_config.TextColumn("Plaza", width="medium", disabled=True),
+        "Regular": st.column_config.NumberColumn("Regular", format="%d"),
+        "Premium": st.column_config.NumberColumn("Premium", format="%d"),
+        "Diesel": st.column_config.NumberColumn("Diesel", format="%d")
+    }
 
-    columnas_texto = ["id_estacion", "nombre", "plaza"]
-    column_config = formato.generar_column_config(df_resultado, columnas_texto=columnas_texto)
-
-    column_config["id_estacion"] = st.column_config.TextColumn("ID", width="small")
-    column_config["nombre"] = st.column_config.TextColumn("Estación", width="medium")
-    column_config["plaza"] = st.column_config.TextColumn("Plaza", width="medium")
-
-    # En Streamlit, NumberColumn con format no fuerza separador de miles como se espera;
-    # por eso se aplica el formato directamente con Pandas Styler.
-    df_formateado = formato.formatear_dataframe_numero(df_resultado, ["Regular", "Premium", "Diesel"])
-
-    st.dataframe(
-        df_formateado,
+    # 5. Mostrar la tabla interactiva con st.data_editor para permitir cambios en los volúmenes
+    df_editado = st.data_editor(
+        df_resultado,
         use_container_width=True,
         hide_index=True,
-        column_config=column_config
+        column_config=column_config,
+        key="editor_inventarios"
     )
+
+    # 6. Botón para guardar o actualizar datos en la base de datos
+    if st.button("💾 Guardar / Actualizar Inventarios", type="primary"):
+        with st.spinner("Guardando cambios..."):
+            try:
+                productos = ["Regular", "Premium", "Diesel"]
+                
+                for _, row in df_editado.iterrows():
+                    id_estacion = row["id_estacion"]
+                    for producto in productos:
+                        volumen = float(row[producto])
+                        # Utilizamos la función de inserción/actualización en Supabase
+                        db.insertar_inventario(
+                            id_estacion=id_estacion,
+                            fecha=fecha_seleccionada,
+                            producto=producto,
+                            volumen=volumen
+                        )
+                
+                st.success("¡Inventarios guardados y actualizados correctamente en la base de datos!")
+                st.rerun()
+            except Exception as e:
+                st.error(f"Ocurrió un error al guardar los datos: {e}")
