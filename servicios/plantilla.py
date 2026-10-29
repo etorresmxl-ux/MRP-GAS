@@ -8,13 +8,13 @@ def obtener_tema_streamlit():
         "background": st.get_option("theme.backgroundColor") or "#012538",
         "secondary_background": st.get_option("theme.secondaryBackgroundColor") or "#4D555B",
         "text": st.get_option("theme.textColor") or "#FCEFEF",
+        "accent": st.get_option("theme.accentColor") or "#1B768E",
     }
 
 
 def aplicar_estilos_globales():
     """Inyecta el tema visual global en la aplicación."""
     tema = obtener_tema_streamlit()
-    accent = "#1B768E"
 
     st.markdown(
         f"""
@@ -24,7 +24,7 @@ def aplicar_estilos_globales():
             --bg: {tema['background']};
             --sidebar: {tema['secondary_background']};
             --text: {tema['text']};
-            --accent: {accent};
+            --accent: {tema['accent']};
         }}
 
         html, body, [data-testid="stAppViewContainer"], .stApp {{
