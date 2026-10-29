@@ -33,6 +33,11 @@ def validar_matriz_productos(df_estaciones, df_resultado, productos=["Regular", 
     df_tanques = obtener_mapa_tanques()
     df_valido = df_resultado.copy()
     
+    # Asegurar que las columnas de productos admitan texto (tipo object) para evitar LossySetitemError
+    for prod in productos:
+        if prod in df_valido.columns:
+            df_valido[prod] = df_valido[prod].astype(object)
+    
     for idx, row in df_valido.iterrows():
         id_est = row["id_estacion"]
         for prod in productos:
