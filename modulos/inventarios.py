@@ -104,12 +104,16 @@ def mostrar_inventarios():
         "Diesel": st.column_config.NumberColumn("Diesel", format="%d")
     }
 
-    # 5. Mostrar la tabla interactiva con st.data_editor para permitir cambios en los volúmenes
+    # Calcular altura dinámica para mostrar todas las filas sin scroll interno (aprox. 35px por fila + 40px del encabezado)
+    altura_tabla = (len(df_resultado) + 1) * 35 + 40
+
+    # 5. Mostrar la tabla interactiva con st.data_editor ajustando la altura para evitar el scroll interno
     df_editado = st.data_editor(
         df_resultado,
         use_container_width=True,
         hide_index=True,
         column_config=column_config,
+        height=altura_tabla,
         key="editor_inventarios"
     )
 
@@ -123,7 +127,6 @@ def mostrar_inventarios():
                     id_estacion = row["id_estacion"]
                     for producto in productos:
                         volumen = float(row[producto])
-                        # Utilizamos la función de inserción/actualización en Supabase
                         db.insertar_inventario(
                             id_estacion=id_estacion,
                             fecha=fecha_seleccionada,
