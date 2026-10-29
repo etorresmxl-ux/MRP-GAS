@@ -24,11 +24,16 @@ def aplicar_estilos_globales():
         /* BARRA LATERAL SLIM Y EFECTO HOVER PARA OPTION_MENU        */
         /* ========================================================= */
         
+        /* Forzar ancho estrecho y permitir desbordamiento del tooltip */
         [data-testid="stSidebar"] {
             background-color: #4D555B !important;
             min-width: 80px !important;
             max-width: 80px !important;
-            transition: width 0.3s ease;
+            width: 80px !important;
+        }
+
+        [data-testid="stSidebar"] > div:first-child {
+            overflow: visible !important;
         }
 
         /* Ocultar botón por defecto de colapsar sidebar */
@@ -36,12 +41,16 @@ def aplicar_estilos_globales():
             display: none !important;
         }
 
-        /* Ocultar texto por defecto de las opciones */
+        /* Ocultar completamente el texto de option_menu por defecto */
+        [data-testid="stSidebar"] .nav-link-text {
+            display: none !important;
+        }
+        
         [data-testid="stSidebar"] .nav-link span {
             display: none !important;
         }
 
-        /* Centrar íconos */
+        /* Centrar íconos y preparar contenedor del enlace */
         [data-testid="stSidebar"] .nav-link {
             display: flex !important;
             justify-content: center !important;
@@ -49,21 +58,39 @@ def aplicar_estilos_globales():
             padding: 12px 0px !important;
             border-radius: 8px !important;
             position: relative !important;
+            width: 60px !important;
+            margin: 0 auto !important;
         }
 
-        /* Mostrar etiqueta con el nombre del módulo al pasar el cursor (Hover) */
-        [data-testid="stSidebar"] .nav-link:hover span {
+        /* Efecto Hover: Mostrar el texto flotante hacia la derecha al pasar el cursor */
+        [data-testid="stSidebar"] .nav-link:hover::after {
+            content: attr(data-bs-original-title);
             display: inline-block !important;
             position: absolute !important;
-            left: 75px !important;
+            left: 70px !important;
             background-color: #012538 !important;
             color: #FB9833 !important;
             padding: 6px 12px !important;
             border-radius: 6px !important;
             font-weight: bold !important;
             white-space: nowrap !important;
-            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.4) !important;
-            z-index: 9999 !important;
+            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5) !important;
+            z-index: 99999 !important;
+            border: 1px solid #1B768E !important;
+        }
+
+        [data-testid="stSidebar"] .nav-link:hover span {
+            display: inline-block !important;
+            position: absolute !important;
+            left: 70px !important;
+            background-color: #012538 !important;
+            color: #FB9833 !important;
+            padding: 6px 12px !important;
+            border-radius: 6px !important;
+            font-weight: bold !important;
+            white-space: nowrap !important;
+            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5) !important;
+            z-index: 99999 !important;
             border: 1px solid #1B768E !important;
         }
 
