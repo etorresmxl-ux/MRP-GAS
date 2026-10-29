@@ -4,6 +4,7 @@ from datetime import date
 import database as db
 from servicios import formato, plantilla, validacion
 
+
 def mostrar_inventarios():
     st.header("📋 Consulta y Actualización de Inventarios")
 
@@ -82,6 +83,10 @@ def mostrar_inventarios():
         if col not in df_resultado.columns:
             df_resultado[col] = 0
 
+    # Asegurar tipos numéricos para poder editar en data_editor
+    for col in productos:
+        df_resultado[col] = pd.to_numeric(df_resultado[col], errors="coerce").fillna(0.0)
+
     df_resultado = df_resultado[["id_estacion", "nombre", "plaza"] + productos]
 
     # Aplicar el servicio de validación de tanques_estaciones
@@ -108,12 +113,12 @@ def mostrar_inventarios():
     """, unsafe_allow_html=True)
 
     column_config = {
-        "id_estacion": st.column_config.TextColumn("ID", width="small", disabled=True),
+        "id_estacion": st.column_config.NumberColumn("ID", width="small", disabled=True),
         "nombre": st.column_config.TextColumn("Estación", width="medium", disabled=True),
         "plaza": st.column_config.TextColumn("Plaza", width="medium", disabled=True),
-        "Regular": st.column_config.TextColumn("Regular", width="small"),
-        "Premium": st.column_config.TextColumn("Premium", width="small"),
-        "Diesel": st.column_config.TextColumn("Diesel", width="small")
+        "Regular": st.column_config.NumberColumn("Regular", width="small", format="%.2f", step=0.01),
+        "Premium": st.column_config.NumberColumn("Premium", width="small", format="%.2f", step=0.01),
+        "Diesel": st.column_config.NumberColumn("Diesel", width="small", format="%.2f", step=0.01),
     }
 
     # Calcular altura exacta basada en filas (26px por fila + 34px de cabecera)
@@ -121,7 +126,7 @@ def mostrar_inventarios():
 
     df_editado = st.data_editor(
         df_resultado,
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
         column_config=column_config,
         height=altura_tabla,
@@ -136,9 +141,9 @@ def mostrar_inventarios():
                     for producto in productos:
                         val = row[producto]
                         # Omitir si es N/A o no válido
-                        if str(val).strip().upper() == "N/A" or pd.isna(val):
+                        if pd.isna(val):
                             continue
-                        
+
                         volumen = float(val)
                         db.insertar_inventario(
                             id_estacion=id_estacion,
@@ -146,7 +151,7 @@ def mostrar_inventarios():
                             producto=producto,
                             volumen=volumen
                         )
-                
+
                 st.success("¡Inventarios guardados y actualizados correctamente en la base de datos!")
                 st.rerun()
             except Exception as e:
