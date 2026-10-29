@@ -1,5 +1,4 @@
 import streamlit as st
-import pandas as pd
 
 def aplicar_estilos_globales():
     """
@@ -79,5 +78,5 @@ def aplicar_estilos_globales():
     )
 
 def aplicar_estilos_tabla():
-    """ Inyecta estilos generales para centrar encabezados y contenido """
+    """Inyecta estilos generales para centrar encabezados y contenido"""
     aplicar_estilos_globales()
