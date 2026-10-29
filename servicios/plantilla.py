@@ -1,5 +1,6 @@
 import streamlit as st
 
+
 def aplicar_estilos_globales():
     """
     Inyecta la paleta de colores con fondo oscuro en toda la aplicación
@@ -76,6 +77,13 @@ def aplicar_estilos_globales():
         """,
         unsafe_allow_html=True,
     )
+
+
+# Alias para compatibilidad con llamadas anteriores al nombre de la función.
+def aplicar_paleta_global():
+    """Compatibilidad con código legado que llama aplicar_paleta_global()."""
+    aplicar_estilos_globales()
+
 
 def aplicar_estilos_tabla():
     """Inyecta estilos generales para centrar encabezados y contenido"""
