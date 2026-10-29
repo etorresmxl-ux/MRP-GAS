@@ -95,7 +95,7 @@ def mostrar_inventarios():
 
     formato.aplicar_estilos_tabla()
 
-    # Reducir la altura de las filas al mínimo sin cortar texto mediante CSS personalizado
+    # Reducir la altura de las filas al mínimo y eliminar el scroll interno en st.data_editor
     st.markdown("""
         <style>
         div[data-testid="stDataEditor"] [data-baseweb="grid"] div[role="row"] {
@@ -109,6 +109,13 @@ def mostrar_inventarios():
             display: flex;
             align-items: center;
         }
+        div[data-testid="stDataEditor"] div[data-baseweb="block"] {
+            max-height: none !important;
+            height: auto !important;
+        }
+        div[data-testid="stDataEditor"] > div {
+            height: auto !important;
+        }
         </style>
     """, unsafe_allow_html=True)
 
@@ -121,10 +128,10 @@ def mostrar_inventarios():
         "Diesel": st.column_config.NumberColumn("Diesel", format="%d")
     }
 
-    # Calcular altura dinámica con filas mínimas de 26px + 34px del encabezado
-    altura_tabla = (len(df_resultado) * 26) + 34
+    # Calcular altura dinámica exacta para que contenga todas las filas y encabezado sin scroll interno
+    altura_tabla = (len(df_resultado) * 26) + 40
 
-    # 5. Mostrar la tabla interactiva con st.data_editor ajustando la altura para evitar el scroll interno
+    # 5. Mostrar la tabla interactiva con st.data_editor
     df_editado = st.data_editor(
         df_resultado,
         use_container_width=True,
