@@ -2,34 +2,35 @@ import streamlit as st
 import pandas as pd
 from datetime import date
 import database as db
-from modulos import importador, estaciones, inventarios, proyecciones
+from modulos import importador, inventarios, proyecciones
+from modulos import estaciones
 from servicios import calculos, plantilla  # <-- Importar el servicio de estilos globales
 from streamlit_option_menu import option_menu
 
-# Configuración inicial de la página
+### Configuración inicial de la página
 st.set_page_config(
-    page_title="Gestión de Combustibles", 
-    page_icon="⛽", 
+    page_title="Gestión de Combustibles",
+    page_icon="⛽",
     layout="wide"
 )
 
-# ---------------------------------------------------------
-# APLICAR ESTILOS Y PALETA DE COLORES GLOBAL (plantilla.py)
-# ---------------------------------------------------------
+### ---------------------------------------------------------
+### APLICAR ESTILOS Y PALETA DE COLORES GLOBAL (plantilla.py)
+### ---------------------------------------------------------
 plantilla.aplicar_estilos_globales()
 
 st.title("⛽ Sistema de Gestión de Combustible")
 
-# ---------------------------------------------------------
-# CARGA GLOBAL AL INICIAR LA PÁGINA
-# ---------------------------------------------------------
+### ---------------------------------------------------------
+### CARGA GLOBAL AL INICIAR LA PÁGINA
+### ---------------------------------------------------------
 with st.spinner("Cargando y procesando modelos de consumo (12 semanas)..."):
     df_ponderados = calculos.obtener_calculos_combustible()
     df_diarios = calculos.obtener_vdp_diario_12w()
 
-# ---------------------------------------------------------
-# MENÚ LATERAL SLIM DE ICONOS CUADRADOS CON EFECTO HOVER
-# ---------------------------------------------------------
+### ---------------------------------------------------------
+### MENÚ LATERAL SLIM DE ICONOS CUADRADOS CON EFECTO HOVER
+### ---------------------------------------------------------
 with st.sidebar:
     menu = option_menu(
         menu_title="Navegación",
@@ -39,7 +40,7 @@ with st.sidebar:
         default_index=0,
         styles={
             "container": {"padding": "0!important", "background-color": "transparent"},
-            "icon": {"color": "#329D9C", "font-size": "20px"}, 
+            "icon": {"color": "#329D9C", "font-size": "20px"},
             "nav-link": {
                 "font-size": "14px",
                 "text-align": "left",
@@ -51,40 +52,40 @@ with st.sidebar:
         }
     )
 
-# ---------------------------------------------------------
-# SECCIÓN 1: ESTACIONES
-# ---------------------------------------------------------
+### ---------------------------------------------------------
+### SECCIÓN 1: ESTACIONES
+### ---------------------------------------------------------
 if menu == "Estaciones":
     estaciones.mostrar_estaciones()
 
-# ---------------------------------------------------------
-# SECCIÓN 2: INVENTARIOS
-# ---------------------------------------------------------
+### ---------------------------------------------------------
+### SECCIÓN 2: INVENTARIOS
+### ---------------------------------------------------------
 elif menu == "Inventarios":
     inventarios.mostrar_inventarios()
 
-# ---------------------------------------------------------
-# SECCIÓN 3: PROYECCIONES
-# ---------------------------------------------------------
+### ---------------------------------------------------------
+### SECCIÓN 3: PROYECCIONES
+### ---------------------------------------------------------
 elif menu == "Proyecciones":
     proyecciones.mostrar_proyecciones()
 
-# ---------------------------------------------------------
-# SECCIÓN 4: VENTAS
-# ---------------------------------------------------------
+### ---------------------------------------------------------
+### SECCIÓN 4: VENTAS
+### ---------------------------------------------------------
 elif menu == "Ventas":
     st.header("📊 Módulo de Ventas")
     st.info("Sección en desarrollo.")
 
-# ---------------------------------------------------------
-# SECCIÓN 5: IMPORTADOR
-# ---------------------------------------------------------
+### ---------------------------------------------------------
+### SECCIÓN 5: IMPORTADOR
+### ---------------------------------------------------------
 elif menu == "Importador":
     importador.mostrar_importador()
 
-# ---------------------------------------------------------
-# SECCIÓN DE PRUEBA DE INDICADORES CARGADOS EN EL SERVICIO
-# ---------------------------------------------------------
+### ---------------------------------------------------------
+### SECCIÓN DE PRUEBA DE INDICADORES CARGADOS EN EL SERVICIO
+### ---------------------------------------------------------
 elif menu == "Indicadores (Prueba)":
     st.header("📈 Indicadores Ponderados (Servicio Centralizado)")
     st.write("Estos datos se cargan una sola vez al abrir la aplicación y están listos para cualquier módulo.")
