@@ -24,12 +24,27 @@ plantilla.aplicar_estilos_globales()
 with st.sidebar:
     st.image("https://img.icons8.com/color/96/gas-station.png", width=80)
 
+    st.markdown(
+        """
+        <style>
+        [data-testid="stSidebarNavLink"] > div {
+            justify-content: center !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+        [data-testid="stSidebarNavLink"] > div > div:nth-child(2) {
+            display: none !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
     menu = option_menu(
         menu_title="",
         options=["Inventarios", "Proyecciones", "Ventas", "Importador"],
         icons=["clipboard-data", "graph-up", "bar-chart", "upload"],
         default_index=0,
-        icons_only=True,
     )
 
 # ---------------------------------------------------------
