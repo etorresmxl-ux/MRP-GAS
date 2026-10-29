@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import date
 import database as db
-from servicios import formato, plantilla, validacion  # <-- Importar validacion
+from servicios import formato, plantilla, validacion
 
 def mostrar_inventarios():
     st.header("📋 Consulta y Actualización de Inventarios")
@@ -90,6 +90,23 @@ def mostrar_inventarios():
     formato.aplicar_estilos_tabla()
     plantilla.aplicar_estilos_tablas(max_rows=50)
 
+    # CSS para reducir altura de filas al mínimo y mostrar filas completas sin scroll interno
+    st.markdown("""
+        <style>
+        div[data-testid="stDataEditor"] [data-baseweb="grid"] div[role="row"] {
+            min-height: 26px !important;
+            height: 26px !important;
+        }
+        div[data-testid="stDataEditor"] [data-baseweb="grid"] div[role="gridcell"],
+        div[data-testid="stDataEditor"] [data-baseweb="grid"] div[role="columnheader"] {
+            padding-top: 1px !important;
+            padding-bottom: 1px !important;
+            display: flex;
+            align-items: center;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
     column_config = {
         "id_estacion": st.column_config.TextColumn("ID", width="small", disabled=True),
         "nombre": st.column_config.TextColumn("Estación", width="medium", disabled=True),
@@ -99,7 +116,8 @@ def mostrar_inventarios():
         "Diesel": st.column_config.TextColumn("Diesel", width="small")
     }
 
-    altura_tabla = min((len(df_resultado) * 26) + 40, (50 * 26) + 40)
+    # Calcular altura exacta basada en filas (26px por fila + 34px de cabecera)
+    altura_tabla = (len(df_resultado) * 26) + 34
 
     df_editado = st.data_editor(
         df_resultado,
@@ -118,7 +136,7 @@ def mostrar_inventarios():
                     for producto in productos:
                         val = row[producto]
                         # Omitir si es N/A o no válido
-                        if str(val).strip().upper() == "N/A":
+                        if str(val).strip().upper() == "N/A" or pd.isna(val):
                             continue
                         
                         volumen = float(val)
