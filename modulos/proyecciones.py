@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import date, timedelta
 import database as db
-from servicios import calculos, formato
+from servicios import calculos, formato, plantilla
 
 
 def formatear_fecha_corta(fecha):
@@ -106,6 +106,7 @@ def mostrar_proyecciones():
     productos = ["Regular", "Premium", "Diesel"]
 
     formato.aplicar_estilos_tabla()
+    plantilla.aplicar_estilos_tablas(max_rows=50)
 
     for producto in productos:
         if producto == "Regular":
@@ -189,9 +190,10 @@ def mostrar_proyecciones():
         for col in columnas_numericas:
             column_config[col] = st.column_config.TextColumn(col, width="small")
 
-        st.dataframe(
+        plantilla.dataframe(
             df_proyeccion,
             use_container_width=True,
             hide_index=True,
-            column_config=column_config
+            column_config=column_config,
+            max_rows=50
         )

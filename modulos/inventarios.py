@@ -2,7 +2,8 @@ import streamlit as st
 import pandas as pd
 from datetime import date
 import database as db
-from servicios import formato
+from servicios import formato, plantilla
+
 
 def mostrar_inventarios():
     st.header("📋 Consulta y Actualización de Inventarios")
@@ -94,30 +95,7 @@ def mostrar_inventarios():
     df_resultado["Diesel"] = df_resultado["Diesel"].astype(int)
 
     formato.aplicar_estilos_tabla()
-
-    # Reducir la altura de las filas al mínimo y eliminar el scroll interno en st.data_editor
-    st.markdown("""
-        <style>
-        div[data-testid="stDataEditor"] [data-baseweb="grid"] div[role="row"] {
-            min-height: 26px !important;
-            height: 26px !important;
-        }
-        div[data-testid="stDataEditor"] [data-baseweb="grid"] div[role="gridcell"],
-        div[data-testid="stDataEditor"] [data-baseweb="grid"] div[role="columnheader"] {
-            padding-top: 1px !important;
-            padding-bottom: 1px !important;
-            display: flex;
-            align-items: center;
-        }
-        div[data-testid="stDataEditor"] div[data-baseweb="block"] {
-            max-height: none !important;
-            height: auto !important;
-        }
-        div[data-testid="stDataEditor"] > div {
-            height: auto !important;
-        }
-        </style>
-    """, unsafe_allow_html=True)
+    plantilla.aplicar_estilos_tablas(max_rows=50)
 
     column_config = {
         "id_estacion": st.column_config.TextColumn("ID", width="small", disabled=True),
@@ -128,8 +106,8 @@ def mostrar_inventarios():
         "Diesel": st.column_config.NumberColumn("Diesel", format="%d")
     }
 
-    # Calcular altura dinámica exacta para que contenga todas las filas y encabezado sin scroll interno
-    altura_tabla = (len(df_resultado) * 26) + 40
+    # Limitar a 50 filas máximo para mantener la vista completa sin scroll vertical
+    altura_tabla = min((len(df_resultado) * 26) + 40, (50 * 26) + 40)
 
     # 5. Mostrar la tabla interactiva con st.data_editor
     df_editado = st.data_editor(

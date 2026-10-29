@@ -1,6 +1,9 @@
 import streamlit as st
 import pandas as pd
 import database as db
+from modulos import importador, inventarios, proyecciones
+from servicios import calculos, plantilla
+from streamlit_option_menu import option_menu
 
 # =========================================================
 # 1. ESTACIONES
@@ -170,6 +173,6 @@ def mostrar_importador():
                 if exitos:
                     st.success(f"¡Importación exitosa! Se procesaron {resultado_msg} registros correctamente.")
                     if df_resultado is not None:
-                        st.dataframe(df_resultado.head(), use_container_width=True)
+                        plantilla.dataframe(df_resultado, use_container_width=True, max_rows=50)
                 else:
                     st.error(f"Hubo un error en la importación: {resultado_msg}")

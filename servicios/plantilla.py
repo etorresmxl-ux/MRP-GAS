@@ -207,8 +207,73 @@ def aplicar_estilos_globales():
 def aplicar_paleta_global():
     """Compatibilidad con código legado."""
     aplicar_estilos_globales()
+    aplicar_estilos_tablas(max_rows=50)
+
+
+def aplicar_estilos_tablas(max_rows=50, row_height=32):
+    """Asegura que las tablas muestren hasta 50 filas sin scroll vertical innecesario."""
+    st.markdown(
+        f"""
+        <style>
+        div[data-testid="stDataFrame"] {{
+            overflow: hidden !important;
+        }}
+        div[data-testid="stDataFrame"] [data-testid="stHorizontalScroll"] {{
+            overflow-x: auto !important;
+            overflow-y: hidden !important;
+        }}
+        div[data-testid="stDataFrame"] > div {{
+            max-height: none !important;
+        }}
+        div[data-testid="stDataEditor"] [data-baseweb="grid"] div[role="row"] {{
+            min-height: {row_height}px !important;
+            height: {row_height}px !important;
+        }}
+        div[data-testid="stDataEditor"] [data-baseweb="grid"] div[role="gridcell"],
+        div[data-testid="stDataEditor"] [data-baseweb="grid"] div[role="columnheader"] {{
+            padding-top: 2px !important;
+            padding-bottom: 2px !important;
+            display: flex !important;
+            align-items: center !important;
+        }}
+        div[data-testid="stDataEditor"] div[data-baseweb="block"] {{
+            max-height: none !important;
+            height: auto !important;
+        }}
+        div[data-testid="stDataEditor"] > div {{
+            height: auto !important;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def dataframe(df, max_rows=50, row_height=32, **kwargs):
+    """Muestra un DataFrame con altura calculada para hasta 50 filas sin scroll vertical."""
+    filas = min(len(df), max_rows)
+    altura = max(180, (filas * row_height) + 46)
+    return st.dataframe(df.head(max_rows), height=int(altura), **kwargs)
+
+
+def data_editor(df, max_rows=50, row_height=32, **kwargs):
+    """Muestra un DataEditor con altura calculada para hasta 50 filas sin scroll vertical."""
+    filas = min(len(df), max_rows)
+    altura = max(180, (filas * row_height) + 46)
+    return st.data_editor(df.head(max_rows), height=int(altura), **kwargs)
 
 
 def aplicar_estilos_tabla():
     """Compatibilidad con código legado para estilos de tabla."""
     aplicar_estilos_globales()
+
+
+__all__ = [
+    "aplicar_estilos_globales",
+    "aplicar_paleta_global",
+    "aplicar_estilos_tablas",
+    "aplicar_estilos_tabla",
+    "dataframe",
+    "data_editor",
+]
+

@@ -17,6 +17,7 @@ st.set_page_config(
 ##### APLICAR ESTILOS Y PALETA DE COLORES GLOBAL (plantilla.py)
 ##### ---------------------------------------------------------
 plantilla.aplicar_paleta_global()
+plantilla.aplicar_estilos_tablas(max_rows=50)
 
 ##### ---------------------------------------------------------
 ##### MENÚ LATERAL SLIM CON ÍCONOS Y SIN TÍTULO
@@ -116,6 +117,6 @@ elif menu == "Indicadores (Prueba)":
     
     if not df_ponderados.empty:
         st.subheader("VSP y VDP Ponderada por Estación y Producto")
-        st.dataframe(df_ponderados, use_container_width=True)
+        plantilla.dataframe(df_ponderados, use_container_width=True, max_rows=50)
     else:
         st.info("No hay suficientes datos históricos para calcular las 12 semanas.")
