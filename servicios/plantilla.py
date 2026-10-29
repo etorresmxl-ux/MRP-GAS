@@ -1,14 +1,27 @@
 import streamlit as st
+from pathlib import Path
+import tomllib
+
+
+def _leer_config_tema():
+    """Lee la configuración de tema desde .streamlit/config.toml."""
+    ruta_config = Path(__file__).resolve().parents[1] / ".streamlit" / "config.toml"
+    try:
+        with ruta_config.open("rb") as archivo:
+            return tomllib.load(archivo).get("theme", {})
+    except FileNotFoundError:
+        return {}
 
 
 def obtener_tema_streamlit():
     """Obtiene la paleta del tema configurada en .streamlit/config.toml."""
+    config_tema = _leer_config_tema()
     return {
-        "primary": st.get_option("theme.primaryColor") or "#FB9833",
-        "background": st.get_option("theme.backgroundColor") or "#012538",
-        "secondary_background": st.get_option("theme.secondaryBackgroundColor") or "#4D555B",
-        "text": st.get_option("theme.textColor") or "#FCEFEF",
-        "accent": st.get_option("theme.accentColor") or "#1B768E",
+        "primary": st.get_option("theme.primaryColor") or config_tema.get("primaryColor", "#FB9833"),
+        "background": st.get_option("theme.backgroundColor") or config_tema.get("backgroundColor", "#012538"),
+        "secondary_background": st.get_option("theme.secondaryBackgroundColor") or config_tema.get("secondaryBackgroundColor", "#4D555B"),
+        "text": st.get_option("theme.textColor") or config_tema.get("textColor", "#FCEFEF"),
+        "accent": config_tema.get("accentColor", "#1B768E"),
     }
 
 
