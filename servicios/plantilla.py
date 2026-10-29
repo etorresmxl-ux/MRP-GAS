@@ -33,38 +33,43 @@ def aplicar_estilos_globales():
         }}
 
         .main .block-container {{
-            padding-top: 0.5rem !important;
-            padding-bottom: 0.25rem !important;
-            padding-left: 1rem !important;
-            padding-right: 1rem !important;
+            padding-top: 0.25rem !important;
+            padding-bottom: 0.2rem !important;
+            padding-left: 0.75rem !important;
+            padding-right: 0.75rem !important;
             margin-top: 0 !important;
+            max-width: 100% !important;
         }}
 
         header[data-testid="stHeader"] {{
             background: transparent !important;
+            box-shadow: none !important;
         }}
 
         div[data-testid="stVerticalBlock"] > div {{
-            gap: 0.25rem !important;
+            gap: 0.15rem !important;
         }}
 
         h1, h2, h3, h4, h5, h6 {{
             color: var(--primary) !important;
             font-weight: 600 !important;
-            margin-top: 0.25rem !important;
-            margin-bottom: 0.35rem !important;
+            margin-top: 0.15rem !important;
+            margin-bottom: 0.25rem !important;
+            line-height: 1.2 !important;
         }}
 
         [data-testid="stSidebar"] {{
             background-color: var(--sidebar) !important;
-            min-width: 80px !important;
-            max-width: 80px !important;
-            width: 80px !important;
+            min-width: 68px !important;
+            max-width: 68px !important;
+            width: 68px !important;
+            border: none !important;
+            box-shadow: none !important;
         }}
 
         [data-testid="stSidebar"] > div:first-child {{
             overflow: visible !important;
-            padding-top: 0.35rem !important;
+            padding-top: 0.2rem !important;
         }}
 
         [data-testid="stSidebarCollapseButton"] {{
@@ -80,11 +85,12 @@ def aplicar_estilos_globales():
             display: flex !important;
             justify-content: center !important;
             align-items: center !important;
-            padding: 10px 0 !important;
+            padding: 8px 0 !important;
             border-radius: 8px !important;
             position: relative !important;
-            width: 60px !important;
+            width: 52px !important;
             margin: 0 auto !important;
+            border: none !important;
         }}
 
         [data-testid="stSidebar"] .nav-link:hover::after,
@@ -92,14 +98,14 @@ def aplicar_estilos_globales():
             content: attr(data-bs-original-title);
             display: inline-block !important;
             position: absolute !important;
-            left: 70px !important;
+            left: 62px !important;
             background-color: var(--bg) !important;
             color: var(--primary) !important;
-            padding: 6px 12px !important;
+            padding: 5px 10px !important;
             border-radius: 6px !important;
             font-weight: bold !important;
             white-space: nowrap !important;
-            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5) !important;
+            box-shadow: 2px 2px 8px rgba(0,0,0,0.35) !important;
             z-index: 99999 !important;
             border: 1px solid var(--accent) !important;
         }}
@@ -110,9 +116,11 @@ def aplicar_estilos_globales():
             border-radius: 8px !important;
             border: none !important;
             font-weight: bold !important;
-            transition: 0.3s ease;
-            margin-top: 0.15rem !important;
-            margin-bottom: 0.15rem !important;
+            transition: 0.2s ease;
+            margin-top: 0.05rem !important;
+            margin-bottom: 0.05rem !important;
+            padding: 0.35rem 0.75rem !important;
+            min-height: 2.1rem !important;
         }}
 
         .stButton > button:hover {{
@@ -122,10 +130,10 @@ def aplicar_estilos_globales():
 
         [data-testid="stMetric"] {{
             background-color: var(--bg) !important;
-            padding: 12px 15px !important;
+            padding: 10px 12px !important;
             border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            border-left: 5px solid var(--primary) !important;
+            box-shadow: none !important;
+            border-left: 4px solid var(--primary) !important;
             border-top: 1px solid var(--accent);
             border-right: 1px solid var(--accent);
             border-bottom: 1px solid var(--accent);
@@ -141,10 +149,17 @@ def aplicar_estilos_globales():
             color: var(--text) !important;
             text-align: center !important;
             font-weight: 600 !important;
+            border: none !important;
         }}
 
         div[data-testid="stDataFrame"] tbody td {{
             text-align: center !important;
+            border: none !important;
+        }}
+
+        div[data-testid="stDataFrame"] {{
+            border: none !important;
+            box-shadow: none !important;
         }}
         </style>
         """,
