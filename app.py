@@ -18,21 +18,47 @@ st.set_page_config(
 ##### ---------------------------------------------------------
 plantilla.aplicar_paleta_global()
 
-st.title("⛽ Sistema de Gestión de Combustible")
+##### ---------------------------------------------------------
+##### MENÚ LATERAL SLIM CON ÍCONOS Y SIN TÍTULO
+##### ---------------------------------------------------------
+st.markdown(
+    """
+    <style>
+    section[data-testid="stSidebar"] {
+        width: 92px !important;
+        min-width: 92px !important;
+    }
 
-##### ---------------------------------------------------------
-##### CARGA GLOBAL AL INICIAR LA PÁGINA
-##### ---------------------------------------------------------
-with st.spinner("Cargando y procesando modelos de consumo (12 semanas)..."):
-    df_ponderados = calculos.obtener_calculos_combustible()
-    df_diarios = calculos.obtener_vdp_diario_12w()
+    section[data-testid="stSidebar"] h1,
+    section[data-testid="stSidebar"] h2,
+    section[data-testid="stSidebar"] h3,
+    section[data-testid="stSidebar"] .nav-section-title {
+        display: none !important;
+    }
 
-##### ---------------------------------------------------------
-##### MENÚ LATERAL SLIM DE ICONOS CUADRADOS CON EFECTO HOVER
-##### ---------------------------------------------------------
+    div[data-testid="stSidebarNav"] a {
+        justify-content: center !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        margin: 6px 0px !important;
+    }
+
+    div[data-testid="stSidebarNav"] a > span:last-child {
+        display: none !important;
+    }
+
+    div[data-testid="stSidebarNav"] a > span:first-child {
+        margin-right: 0 !important;
+        font-size: 1.4rem !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 with st.sidebar:
     menu = option_menu(
-        menu_title=None,
+        menu_title="",
         options=["Inventarios", "Proyecciones", "Ventas", "Importador", "Indicadores (Prueba)"],
         icons=["clipboard-data", "graph-up", "bar-chart", "cloud-upload", "cpu"],
         default_index=0,
@@ -42,10 +68,19 @@ with st.sidebar:
             "nav-link": {
                 "margin": "8px 0px",
                 "transition": "0.2s",
+                "font-size": "0px",
+                "text-align": "center",
             },
             "nav-link-selected": {"background-color": "#FB9833", "color": "#012538"},
         }
     )
+
+##### ---------------------------------------------------------
+##### CARGA GLOBAL AL INICIAR LA PÁGINA
+##### ---------------------------------------------------------
+with st.spinner("Cargando y procesando modelos de consumo (12 semanas)..."):
+    df_ponderados = calculos.obtener_calculos_combustible()
+    df_diarios = calculos.obtener_vdp_diario_12w()
 
 ##### ---------------------------------------------------------
 ##### SECCIÓN 1: INVENTARIOS
