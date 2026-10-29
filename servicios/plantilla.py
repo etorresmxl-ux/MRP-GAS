@@ -102,7 +102,9 @@ def aplicar_estilos_globales():
             display: none !important;
         }}
 
-        [data-testid="stSidebar"] .nav-link {{
+        [data-testid="stSidebar"] .nav-link,
+        [data-testid="stSidebar"] a[data-testid="stSidebarNavLink"],
+        [data-testid="stSidebar"] .stSidebarNavItems a {{
             display: flex !important;
             justify-content: center !important;
             align-items: center !important;
@@ -112,6 +114,20 @@ def aplicar_estilos_globales():
             width: 52px !important;
             margin: 0 auto !important;
             border: none !important;
+            background: transparent !important;
+            color: var(--text) !important;
+            box-shadow: none !important;
+        }}
+
+        [data-testid="stSidebar"] .nav-link:hover,
+        [data-testid="stSidebar"] .nav-link:focus,
+        [data-testid="stSidebar"] a[aria-current="page"],
+        [data-testid="stSidebar"] a[data-testid="stSidebarNavLink"][aria-current="page"],
+        [data-testid="stSidebar"] .nav-link.active {{
+            background-color: var(--accent) !important;
+            color: var(--text) !important;
+            border-radius: 10px !important;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12) !important;
         }}
 
         [data-testid="stSidebar"] .nav-link:hover::after,
