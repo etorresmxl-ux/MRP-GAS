@@ -3,7 +3,8 @@ import streamlit as st
 def aplicar_estilos_globales():
     """
     Inyecta la paleta de colores con fondo oscuro en toda la aplicación y aplica
-    los estilos CSS para tablas, métricas, botones y barra lateral Slim interactiva.
+    los estilos CSS para tablas, métricas, botones, reducción de márgenes superiores
+    y barra lateral Slim interactiva.
     """
     st.markdown(
         """
@@ -14,10 +15,24 @@ def aplicar_estilos_globales():
             color: #FCEFEF !important;
         }
 
-        /* Encabezados */
+        /* Reducción del espacio libre superior al mínimo sin causar cortes de texto */
+        .block-container, [data-testid="stMainBlockContainer"] {
+            padding-top: 1rem !important;
+            padding-bottom: 1rem !important;
+        }
+
+        /* Encabezados compactos y reducción de espacio entre saltos de línea */
         h1, h2, h3, h4, h5, h6 {
             color: #FB9833 !important;
             font-weight: 600 !important;
+            margin-top: 0.2rem !important;
+            margin-bottom: 0.4rem !important;
+            line-height: 1.15 !important;
+        }
+
+        /* Reducción de espacio y altura de línea en párrafos e interlineado general */
+        p, div, span {
+            line-height: 1.25 !important;
         }
 
         /* ========================================================= */
