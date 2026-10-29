@@ -16,7 +16,7 @@ st.set_page_config(
 ### ---------------------------------------------------------
 ### APLICAR ESTILOS Y PALETA DE COLORES GLOBAL (plantilla.py)
 ### ---------------------------------------------------------
-plantilla.aplicar_estilos_globales()
+plantilla.aplicar_paleta_global()
 
 st.title("⛽ Sistema de Gestión de Combustible")
 
