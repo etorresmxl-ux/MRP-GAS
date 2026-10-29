@@ -23,13 +23,13 @@ plantilla.aplicar_estilos_globales()
 # ---------------------------------------------------------
 with st.sidebar:
     st.image("https://img.icons8.com/color/96/gas-station.png", width=80)
-    st.title("MRP Gas")
-    
+
     menu = option_menu(
-        menu_title="Menú Principal",
+        menu_title="",
         options=["Inventarios", "Proyecciones", "Ventas", "Importador"],
         icons=["clipboard-data", "graph-up", "bar-chart", "upload"],
         default_index=0,
+        icons_only=True,
     )
 
 # ---------------------------------------------------------
