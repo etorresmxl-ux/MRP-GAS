@@ -4,7 +4,6 @@ from datetime import date
 import database as db
 from modulos import importador, inventarios, proyecciones
 from servicios import calculos, plantilla, validacion
-from streamlit_option_menu import option_menu
 
 # Configuración inicial de la página
 st.set_page_config(
@@ -18,18 +17,55 @@ st.set_page_config(
 # ---------------------------------------------------------
 plantilla.aplicar_estilos_globales()
 
+st.markdown(
+    """
+    <style>
+    [data-testid="stSidebar"] {
+        width: 90px !important;
+        min-width: 90px !important;
+        max-width: 90px !important;
+    }
+    [data-testid="stSidebar"] .stRadio {
+        width: 100%;
+    }
+    [data-testid="stSidebar"] div[role="radiogroup"] {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.45rem !important;
+    }
+    [data-testid="stSidebar"] label {
+        justify-content: center !important;
+        text-align: center !important;
+        padding: 0.5rem 0.2rem !important;
+        border-radius: 10px !important;
+        min-height: 2.6rem !important;
+        font-size: 0.72rem !important;
+        line-height: 1.1 !important;
+    }
+    [data-testid="stSidebar"] label > div:first-child {
+        display: none !important;
+    }
+    [data-testid="stSidebar"] label > span:last-child {
+        white-space: normal !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 # ---------------------------------------------------------
 # MENÚ LATERAL DE NAVEGACIÓN
 # ---------------------------------------------------------
 with st.sidebar:
-    st.image("https://img.icons8.com/color/96/gas-station.png", width=80)
+    st.image("https://img.icons8.com/color/96/gas-station.png", width=60)
     st.title("MRP Gas")
-    
-    menu = option_menu(
-        menu_title="Menú Principal",
-        options=["Inventarios", "Proyecciones", "Ventas", "Importador"],
-        icons=["clipboard-data", "graph-up", "bar-chart", "upload"],
-        default_index=0,
+
+    menu = st.radio(
+        " ",
+        ["Inventarios", "Proyecciones", "Ventas", "Importador"],
+        index=0,
+        label_visibility="collapsed",
+        key="sidebar_menu"
     )
 
 # ---------------------------------------------------------
