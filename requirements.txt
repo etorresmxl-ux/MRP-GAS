@@ -1,4 +1,5 @@
 streamlit
+streamlit-option_menu
 supabase
 pandas
 openpyxl
