@@ -27,14 +27,14 @@ def aplicar_estilos_globales():
             --accent: {accent};
         }}
 
-        .stApp {{
-            background-color: var(--bg) !important;
+        html, body, [data-testid="stAppViewContainer"], .stApp {{
+            background: var(--bg) !important;
             color: var(--text) !important;
         }}
 
         .main .block-container {{
-            padding-top: 0.25rem !important;
-            padding-bottom: 0.2rem !important;
+            padding-top: 0.35rem !important;
+            padding-bottom: 0.15rem !important;
             padding-left: 0.75rem !important;
             padding-right: 0.75rem !important;
             margin-top: 0 !important;
@@ -46,6 +46,14 @@ def aplicar_estilos_globales():
             box-shadow: none !important;
         }}
 
+        footer {{
+            visibility: hidden !important;
+        }}
+
+        #MainMenu {{
+            display: none !important;
+        }}
+
         div[data-testid="stVerticalBlock"] > div {{
             gap: 0.15rem !important;
         }}
@@ -55,14 +63,14 @@ def aplicar_estilos_globales():
             font-weight: 600 !important;
             margin-top: 0.15rem !important;
             margin-bottom: 0.25rem !important;
-            line-height: 1.2 !important;
+            line-height: 1.15 !important;
         }}
 
         [data-testid="stSidebar"] {{
             background-color: var(--sidebar) !important;
-            min-width: 68px !important;
-            max-width: 68px !important;
-            width: 68px !important;
+            min-width: 66px !important;
+            max-width: 66px !important;
+            width: 66px !important;
             border: none !important;
             box-shadow: none !important;
         }}
@@ -98,7 +106,7 @@ def aplicar_estilos_globales():
             content: attr(data-bs-original-title);
             display: inline-block !important;
             position: absolute !important;
-            left: 62px !important;
+            left: 60px !important;
             background-color: var(--bg) !important;
             color: var(--primary) !important;
             padding: 5px 10px !important;
@@ -115,7 +123,7 @@ def aplicar_estilos_globales():
             color: var(--bg) !important;
             border-radius: 8px !important;
             border: none !important;
-            font-weight: bold !important;
+            font-weight: 700 !important;
             transition: 0.2s ease;
             margin-top: 0.05rem !important;
             margin-bottom: 0.05rem !important;
@@ -134,9 +142,9 @@ def aplicar_estilos_globales():
             border-radius: 10px;
             box-shadow: none !important;
             border-left: 4px solid var(--primary) !important;
-            border-top: 1px solid var(--accent);
-            border-right: 1px solid var(--accent);
-            border-bottom: 1px solid var(--accent);
+            border-top: 1px solid var(--accent) !important;
+            border-right: 1px solid var(--accent) !important;
+            border-bottom: 1px solid var(--accent) !important;
         }}
 
         [data-testid="stMetricLabel"],
