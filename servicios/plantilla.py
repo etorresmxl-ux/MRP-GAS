@@ -17,6 +17,7 @@ def aplicar_estilos_globales():
     los estilos CSS para tablas, métricas, botones y barra lateral Slim interactiva.
     """
     tema = obtener_tema_streamlit()
+    accent = "#1B768E"
 
     st.markdown(
         f"""
@@ -26,25 +27,21 @@ def aplicar_estilos_globales():
             --bg: {tema['background']};
             --sidebar: {tema['secondary_background']};
             --text: {tema['text']};
+            --accent: {accent};
         }}
 
-        /* Color general de fondo y texto principal */
+        /* Base */
         .stApp {{
             background-color: var(--bg) !important;
             color: var(--text) !important;
         }}
 
-        /* Encabezados */
         h1, h2, h3, h4, h5, h6 {{
             color: var(--primary) !important;
             font-weight: 600 !important;
         }}
 
-        /* ========================================================= */
-        /* BARRA LATERAL SLIM Y EFECTO HOVER PARA OPTION_MENU        */
-        /* ========================================================= */
-
-        /* Forzar ancho estrecho y permitir desbordamiento del tooltip */
+        /* Sidebar slim */
         [data-testid="stSidebar"] {{
             background-color: var(--sidebar) !important;
             min-width: 80px !important;
@@ -56,34 +53,28 @@ def aplicar_estilos_globales():
             overflow: visible !important;
         }}
 
-        /* Ocultar botón por defecto de colapsar sidebar */
         [data-testid="stSidebarCollapseButton"] {{
             display: none !important;
         }}
 
-        /* Ocultar completamente el texto de option_menu por defecto */
-        [data-testid="stSidebar"] .nav-link-text {{
-            display: none !important;
-        }}
-
+        [data-testid="stSidebar"] .nav-link-text,
         [data-testid="stSidebar"] .nav-link span {{
             display: none !important;
         }}
 
-        /* Centrar íconos y preparar contenedor del enlace */
         [data-testid="stSidebar"] .nav-link {{
             display: flex !important;
             justify-content: center !important;
             align-items: center !important;
-            padding: 12px 0px !important;
+            padding: 12px 0 !important;
             border-radius: 8px !important;
             position: relative !important;
             width: 60px !important;
             margin: 0 auto !important;
         }}
 
-        /* Efecto Hover: Mostrar el texto flotante hacia la derecha al pasar el cursor */
-        [data-testid="stSidebar"] .nav-link:hover::after {{
+        [data-testid="stSidebar"] .nav-link:hover::after,
+        [data-testid="stSidebar"] .nav-link:hover span {{
             content: attr(data-bs-original-title);
             display: inline-block !important;
             position: absolute !important;
@@ -96,25 +87,10 @@ def aplicar_estilos_globales():
             white-space: nowrap !important;
             box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5) !important;
             z-index: 99999 !important;
-            border: 1px solid #1B768E !important;
+            border: 1px solid var(--accent) !important;
         }}
 
-        [data-testid="stSidebar"] .nav-link:hover span {{
-            display: inline-block !important;
-            position: absolute !important;
-            left: 70px !important;
-            background-color: var(--bg) !important;
-            color: var(--primary) !important;
-            padding: 6px 12px !important;
-            border-radius: 6px !important;
-            font-weight: bold !important;
-            white-space: nowrap !important;
-            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5) !important;
-            z-index: 99999 !important;
-            border: 1px solid #1B768E !important;
-        }}
-
-        /* Botones principales */
+        /* Botones */
         .stButton > button {{
             background-color: var(--primary) !important;
             color: var(--bg) !important;
@@ -125,30 +101,31 @@ def aplicar_estilos_globales():
         }}
 
         .stButton > button:hover {{
-            background-color: #1B768E !important;
-            color: #FCEFEF !important;
+            background-color: var(--accent) !important;
+            color: var(--text) !important;
         }}
 
-        /* Tarjetas de métricas (st.metric) */
+        /* Métricas */
         [data-testid="stMetric"] {{
             background-color: var(--bg) !important;
             padding: 15px;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
             border-left: 5px solid var(--primary) !important;
-            border-top: 1px solid #1B768E;
-            border-right: 1px solid #1B768E;
-            border-bottom: 1px solid #1B768E;
+            border-top: 1px solid var(--accent);
+            border-right: 1px solid var(--accent);
+            border-bottom: 1px solid var(--accent);
         }}
 
-        [data-testid="stMetricLabel"], [data-testid="stMetricValue"] {{
+        [data-testid="stMetricLabel"],
+        [data-testid="stMetricValue"] {{
             color: var(--text) !important;
         }}
 
-        /* Estilos de tablas y DataFrames */
+        /* Tablas */
         div[data-testid="stDataFrame"] thead th {{
-            background-color: #1B768E !important;
-            color: #FCEFEF !important;
+            background-color: var(--accent) !important;
+            color: var(--text) !important;
             text-align: center !important;
             justify-content: center !important;
             font-weight: 600 !important;
