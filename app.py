@@ -8,7 +8,7 @@ from streamlit_option_menu import option_menu
 
 # Configuración inicial de la página
 st.set_page_config(
-    page_title="Gestión de Combustibles",
+    page_title="Sistema de Gestión de Combustible",
     page_icon="⛽",
     layout="wide"
 )
@@ -18,7 +18,7 @@ st.set_page_config(
 # ---------------------------------------------------------
 with st.sidebar:
     st.image("https://img.icons8.com/color/96/gas-station.png", width=80)
-    st.title("MRP Gas")
+    st.title("FMS")
     
     menu = option_menu(
         menu_title="Menú Principal",
