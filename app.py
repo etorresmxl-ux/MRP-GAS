@@ -19,7 +19,7 @@ st.set_page_config(
 with st.sidebar:
     st.image("https://img.icons8.com/color/96/gas-station.png", width=50)
     
-    # Configuración de opción slim usando lista de opciones vacías
+    # Menú slim configurado sin texto en las opciones
     menu_index = option_menu(
         menu_title=None,
         options=["", "", "", ""],
@@ -32,7 +32,7 @@ with st.sidebar:
         }
     )
 
-    # Mapeo del índice devuelto por option_menu a la sección
+    # Mapeo del índice devuelto (0 a 3) a las secciones correspondientes
     secciones = ["Inventarios", "Proyecciones", "Ventas", "Importador"]
     menu = secciones[menu_index]
 
