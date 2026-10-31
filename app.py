@@ -18,7 +18,7 @@ st.set_page_config(
 # ---------------------------------------------------------
 with st.sidebar:
     st.image("https://img.icons8.com/color/96/gas-station.png", width=80)
-    st.title("FMS")
+    st.title("Fuel Management System")
     
     menu = option_menu(
         menu_title="Menú Principal",
