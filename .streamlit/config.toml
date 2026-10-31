@@ -1,17 +1,10 @@
 [theme]
-
-primaryColor = "#EA8B33" # Naranja principal de la paleta (botones, selectores y sliders)
-
-backgroundColor = "#132F45" # Azul oscuro profundo (fondo principal de la aplicación)
-
-secondaryBackgroundColor = "#32667F" # Azul acero (barra lateral, contenedores y tablas)
-
-textColor = "#F3B940" # Amarillo cálido para el texto principal con buen contraste
-
-accentColor = "#EEA23A" # Tono de acento secundario
-
-font = "sans serif" # Fuente principal de la interfaz
+primaryColor = "#3B82F6"  # Azul interactivo principal (botones y selecciones)
+backgroundColor = "#F8FAFC"  # Blanco/Gris muy claro para el fondo principal
+secondaryBackgroundColor = "#FFFFFF"  # Blanco puro para contenedores, tarjetas y barra lateral
+textColor = "#1E293B"  # Gris oscuro/azulado para un texto sumamente legible
+accentColor = "#6366F1"  # Acento secundario (púrpura/índigo)
+font = "sans serif"
 
 [ui]
-
 hideTopBar = false
