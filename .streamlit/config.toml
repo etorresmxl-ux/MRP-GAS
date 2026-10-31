@@ -1,9 +1,9 @@
 [theme]
-primaryColor = "#2E77AE" # Color primario utilizado en botones, enlaces, selecciones y sliders
-backgroundColor = "#0d2137" # Color de fondo principal de toda la aplicación
-secondaryBackgroundColor = "#162B46" # Color de fondo para elementos secundarios como la barra lateral y tablas
-textColor = "#E0EAF5" # Color principal del texto
-accentColor = "#FF8E2B" # Color de acento opcional
+primaryColor = "#F1642E" # Naranja saturado de la paleta (botones, selecciones y sliders)
+backgroundColor = "#504E76" # Morado oscuro (fondo principal)
+secondaryBackgroundColor = "#C4C3E3" # Morado pastel (barra lateral, contenedores y tablas)
+textColor = "#FDF8E2" # Beige claro (texto principal con excelente contraste)
+accentColor = "#A3B565" # Verde claro apacible (detalles y acentos)
 font = "sans serif" # Fuente principal de la interfaz
 
 [ui]
