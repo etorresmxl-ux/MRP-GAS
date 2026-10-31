@@ -2,8 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import date, timedelta
 import database as db
-from servicios import calculos, formato, plantilla
-
+from servicios import calculos
 
 def formatear_fecha_corta(fecha):
     """
@@ -17,7 +16,6 @@ def formatear_fecha_corta(fecha):
     dia_str = dias_semana[fecha.weekday()]
     mes_str = meses[fecha.month]
     return f"{dia_str} - {fecha.day:02d}-{mes_str}"
-
 
 def normalizar_dia_semana(valor_dia):
     """
@@ -36,7 +34,6 @@ def normalizar_dia_semana(valor_dia):
         'domingo': 6, 'dom': 6
     }
     return mapa.get(val, None)
-
 
 def mostrar_proyecciones():
     st.header("📈 Proyección e Integridad de Inventarios (14 Días)")
@@ -104,9 +101,6 @@ def mostrar_proyecciones():
         df_factores = pd.DataFrame()
 
     productos = ["Regular", "Premium", "Diesel"]
-
-    formato.aplicar_estilos_tabla()
-    plantilla.aplicar_estilos_tablas(max_rows=50)
 
     for producto in productos:
         if producto == "Regular":
@@ -179,21 +173,15 @@ def mostrar_proyecciones():
 
         df_proyeccion = pd.DataFrame(data_dict)
 
-        columnas_numericas = [col for col in df_proyeccion.columns if col != "Concepto"]
-        for col in columnas_numericas:
-            decimales = 1 if col == columnas_numericas[-1] else 0
-            df_proyeccion[col] = df_proyeccion[col].apply(lambda v: formato.formatear_numero_para_texto(v, decimales))
-
         column_config = {
             "Concepto": st.column_config.TextColumn("Concepto", width="medium")
         }
-        for col in columnas_numericas:
+        for col in [c for c in df_proyeccion.columns if c != "Concepto"]:
             column_config[col] = st.column_config.TextColumn(col, width="small")
 
-        plantilla.dataframe(
+        st.dataframe(
             df_proyeccion,
             use_container_width=True,
             hide_index=True,
-            column_config=column_config,
-            max_rows=50
+            column_config=column_config
         )
