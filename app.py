@@ -1,7 +1,12 @@
 import streamlit as st
+import pandas as pd
+from datetime import date
+import database as db
+from modulos import importador, inventarios, proyecciones
+from servicios import calculos
 from streamlit_option_menu import option_menu
 
-# Configuración de página
+# Configuración inicial de la página
 st.set_page_config(
     page_title="Gestión de Combustibles",
     page_icon="⛽",
@@ -10,167 +15,126 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------------
-# ESTILOS CSS PERSONALIZADOS (Estilo Modern Dark Glass/Floating)
+# ESTILOS CSS PERSONALIZADOS (Sidebar Flotante y Hover Automático)
 # ---------------------------------------------------------
 st.markdown("""
     <style>
-    /* Estilo del contenedor principal de la barra lateral */
+    /* 1. Ancho base colapsado (solo muestra íconos) y transición fluida */
     [data-testid="stSidebar"] {
+        transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        width: 85px !important;
+        min-width: 85px !important;
         background-color: transparent !important;
-        padding: 10px;
     }
-    
+
+    /* 2. Al colocar el cursor (hover), se expande al ancho completo */
+    [data-testid="stSidebar"]:hover {
+        width: 260px !important;
+        min-width: 260px !important;
+    }
+
+    /* 3. Comportamiento de los textos: ocultos por defecto, visibles en hover */
+    [data-testid="stSidebar"] .sidebar-text,
+    [data-testid="stSidebar"] span:not(.icon-fixed),
+    [data-testid="stSidebar"] p,
+    [data-testid="stSidebar"] div[data-testid="stMarkdownContainer"] p,
+    [data-testid="stSidebar"] .nav-link-text {
+        opacity: 0;
+        transition: opacity 0.2s ease-in-out;
+        white-space: nowrap;
+        pointer-events: none;
+    }
+
+    /* Revelar textos y elementos al hacer hover sobre la barra lateral */
+    [data-testid="stSidebar"]:hover .sidebar-text,
+    [data-testid="stSidebar"]:hover span:not(.icon-fixed),
+    [data-testid="stSidebar"]:hover p,
+    [data-testid="stSidebar"]:hover div[data-testid="stMarkdownContainer"] p,
+    [data-testid="stSidebar"]:hover .nav-link-text {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    /* Contenedor interno con diseño flotante oscuro moderno */
     [data-testid="stSidebarContent"] {
-        background: #1e1f25;
-        border-radius: 24px;
+        background-color: #16181d;
+        border-radius: 20px;
         margin: 10px;
-        padding: 20px 14px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        padding: 16px 12px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.4);
         border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-
-    /* Avatar y Sección de Perfil del Usuario */
-    .profile-card {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 24px;
-        padding: 6px 8px;
-    }
-    .profile-img {
-        width: 42px;
-        height: 42px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 2px solid #323543;
-    }
-    .profile-info {
-        display: flex;
-        flex-direction: column;
-    }
-    .profile-greeting {
-        font-size: 11px;
-        color: #8c8f9a;
-        margin: 0;
-    }
-    .profile-name {
-        font-size: 15px;
-        font-weight: 600;
-        color: #ffffff;
-        margin: 0;
-    }
-
-    /* Títulos de sección (Menu: 6, Service: 3, etc.) */
-    .menu-header {
-        font-size: 11px;
-        font-weight: 600;
-        color: #6b6e7b;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin: 16px 0 8px 12px;
-    }
-
-    /* Estilo del botón flotante inferior de Acción (Create new task) */
-    .floating-btn-container {
-        background: linear-gradient(135deg, #2a2d3a 0%, #1a1b22 100%);
-        border-radius: 18px;
-        padding: 18px;
-        text-align: center;
-        margin-top: 25px;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-    .action-circle-btn {
-        background: #3b82f6;
-        color: white;
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 10px auto;
-        font-size: 20px;
-        font-weight: bold;
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-    }
-    .action-title {
-        color: #ffffff;
-        font-size: 13px;
-        font-weight: 600;
-        margin-bottom: 4px;
-    }
-    .action-subtitle {
-        color: #717585;
-        font-size: 11px;
+        overflow-x: hidden;
     }
     </style>
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# CONTENIDO DE LA BARRA LATERAL (SIDEBAR)
+# MENÚ LATERAL DE NAVEGACIÓN
 # ---------------------------------------------------------
 with st.sidebar:
-    # 1. Cabecera del Usuario / Perfil
+    # Cabecera del Sidebar
     st.markdown("""
-        <div class="profile-card">
-            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" class="profile-img"/>
-            <div class="profile-info">
-                <span class="profile-greeting">Good Day 👋</span>
-                <span class="profile-name">Vitaliy D.</span>
-            </div>
+        <div style="display: flex; align-items: center; gap: 14px; padding: 6px 4px; margin-bottom: 24px;">
+            <div style="background: #ffffff; border-radius: 14px; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; color: #000; font-weight: bold; flex-shrink: 0;">⛽</div>
+            <span class="sidebar-text" style="font-weight: 700; font-size: 16px; color: #fff;">MRP Gas</span>
         </div>
     """, unsafe_allow_html=True)
-
-    # 2. Título de Sección
-    st.markdown('<div class="menu-header">Menu: 4</div>', unsafe_allow_html=True)
     
-    # 3. Menú Principal utilizando streamlit_option_menu
+    st.markdown('<p class="sidebar-text" style="color: #6b7280; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px;">Menú Principal</p>', unsafe_allow_html=True)
+
+    # Menú interactivo con soporte de íconos y textos colapsables
     menu = option_menu(
         menu_title=None,
-        options=["Dashboard", "Proyecciones", "Inventarios", "Importador"],
-        icons=["grid-1x2-fill", "kanban", "calendar-event", "cloud-upload"],
+        options=["Inventarios", "Proyecciones", "Ventas", "Importador"],
+        icons=["clipboard-data", "graph-up", "bar-chart", "upload"],
         default_index=0,
         styles={
             "container": {"padding": "0!important", "background-color": "transparent"},
-            "icon": {"color": "#8c8f9a", "font-size": "15px"},
+            "icon": {"color": "#9ca3af", "font-size": "18px"},
             "nav-link": {
-                "font-size": "13px",
+                "font-size": "14px",
                 "text-align": "left",
                 "margin": "4px 0px",
-                "color": "#a0a5b5",
-                "border-radius": "12px",
-                "padding": "10px 14px",
+                "color": "#9ca3af",
+                "border-radius": "10px",
+                "padding": "10px 12px",
                 "font-weight": "500",
             },
             "nav-link-selected": {
-                "background-color": "#2c2d38",
+                "background-color": "#23262e",
                 "color": "#ffffff",
                 "font-weight": "600",
             },
         }
     )
 
-    # 4. Tarjeta Flotante Inferior de Acción Rápida
-    st.markdown("""
-        <div class="floating-btn-container">
-            <div class="action-circle-btn">+</div>
-            <div class="action-title">Create new task</div>
-            <div class="action-subtitle">Or use invite link</div>
-        </div>
-    """, unsafe_allow_html=True)
+# ---------------------------------------------------------
+# CARGA GLOBAL AL INICIAR LA PÁGINA
+# ---------------------------------------------------------
+with st.spinner("Cargando y procesando modelos de consumo (12 semanas)..."):
+    df_ponderados = calculos.obtener_calculos_combustible()
 
 # ---------------------------------------------------------
-# LÓGICA DE NAVEGACIÓN Y CONTENIDO
+# SECCIÓN 1: INVENTARIOS
 # ---------------------------------------------------------
-if menu == "Dashboard":
-    st.title("📊 Dashboard")
-    st.write("Bienvenido al panel principal.")
+if menu == "Inventarios":
+    inventarios.mostrar_inventarios()
+
+# ---------------------------------------------------------
+# SECCIÓN 2: PROYECCIONES
+# ---------------------------------------------------------
 elif menu == "Proyecciones":
-    st.title("📈 Proyecciones")
-    st.write("Vista de proyecciones y estimaciones.")
-elif menu == "Inventarios":
-    st.title("📦 Inventarios")
-    st.write("Gestión de inventario de combustibles.")
+    proyecciones.mostrar_proyecciones()
+
+# ---------------------------------------------------------
+# SECCIÓN 3: VENTAS
+# ---------------------------------------------------------
+elif menu == "Ventas":
+    st.header("📊 Módulo de Ventas")
+    st.info("Sección en desarrollo.")
+
+# ---------------------------------------------------------
+# SECCIÓN 4: IMPORTADOR
+# ---------------------------------------------------------
 elif menu == "Importador":
-    st.title("📥 Importador")
-    st.write("Módulo de carga e importación de datos.")
+    importador.mostrar_importador()
