@@ -92,40 +92,13 @@ def mostrar_inventarios():
         "nombre": st.column_config.TextColumn("Estación", width="medium", disabled=True),
         "plaza": st.column_config.TextColumn("Plaza", width="medium", disabled=True),
         "Regular": st.column_config.TextColumn("Regular", width="small"),
-.       "Premium": st.column_config.TextColumn("Premium", width="small"),
+        "Premium": st.column_config.TextColumn("Premium", width="small"),
         "Diesel": st.column_config.TextColumn("Diesel", width="small")
     }
 
-    altura_tabla = min((len(df_resultado) * 26) + 40, (50 * 26) + 40)
-
-    df_editado = st.data_editor(
+    st.dataframe(
         df_resultado,
-        use_container_width=True,
+        width='stretch',
         hide_index=True,
-        column_config=column_config,
-        height=altura_tabla,
-        key="editor_inventarios"
+        column_config=column_config
     )
-
-    if st.button("💾 Guardar / Actualizar Inventarios", type="primary"):
-        with st.spinner("Guardando cambios..."):
-            try:
-                for _, row in df_editado.iterrows():
-                    id_estacion = row["id_estacion"]
-                    for producto in productos:
-                        val = row[producto]
-                        if str(val).strip().upper() == "N/A":
-                            continue
-                        
-                        volumen = float(val)
-                        db.insertar_inventario(
-                            id_estacion=id_estacion,
-                            fecha=fecha_seleccionada,
-                            producto=producto,
-                            volumen=volumen
-                        )
-                
-                st.success("¡Inventarios guardados y actualizados correctamente en la base de datos!")
-                st.rerun()
-            except Exception as e:
-                st.error(f"Ocurrió un error al guardar los datos: {e}")
