@@ -6,16 +6,16 @@ from modulos import importador, inventarios, proyecciones
 from servicios import calculos
 from streamlit_option_menu import option_menu
 
-##### Configuración inicial de la página
+# Configuración inicial de la página
 st.set_page_config(
     page_title="Gestión de Combustibles",
     page_icon="⛽",
     layout="wide"
 )
 
-##### ---------------------------------------------------------
-##### MENÚ LATERAL DE NAVEGACIÓN
-##### ---------------------------------------------------------
+# ---------------------------------------------------------
+# MENÚ LATERAL DE NAVEGACIÓN
+# ---------------------------------------------------------
 with st.sidebar:
     st.image("https://img.icons8.com/color/96/gas-station.png", width=80)
     st.title("MRP Gas")
@@ -27,33 +27,33 @@ with st.sidebar:
         default_index=0,
     )
 
-##### ---------------------------------------------------------
-##### CARGA GLOBAL AL INICIAR LA PÁGINA
-##### ---------------------------------------------------------
+# ---------------------------------------------------------
+# CARGA GLOBAL AL INICIAR LA PÁGINA
+# ---------------------------------------------------------
 with st.spinner("Cargando y procesando modelos de consumo (12 semanas)..."):
     df_ponderados = calculos.obtener_calculos_combustible()
 
-##### ---------------------------------------------------------
-##### SECCIÓN 1: INVENTARIOS
-##### ---------------------------------------------------------
+# ---------------------------------------------------------
+# SECCIÓN 1: INVENTARIOS
+# ---------------------------------------------------------
 if menu == "Inventarios":
     inventarios.mostrar_inventarios()
 
-##### ---------------------------------------------------------
-##### SECCIÓN 2: PROYECCIONES
-##### ---------------------------------------------------------
+# ---------------------------------------------------------
+# SECCIÓN 2: PROYECCIONES
+# ---------------------------------------------------------
 elif menu == "Proyecciones":
     proyecciones.mostrar_proyecciones()
 
-##### ---------------------------------------------------------
-##### SECCIÓN 3: VENTAS
-##### ---------------------------------------------------------
+# ---------------------------------------------------------
+# SECCIÓN 3: VENTAS
+# ---------------------------------------------------------
 elif menu == "Ventas":
     st.header("📊 Módulo de Ventas")
     st.info("Sección en desarrollo.")
 
-##### ---------------------------------------------------------
-##### SECCIÓN 4: IMPORTADOR
-##### ---------------------------------------------------------
+# ---------------------------------------------------------
+# SECCIÓN 4: IMPORTADOR
+# ---------------------------------------------------------
 elif menu == "Importador":
     importador.mostrar_importador()
