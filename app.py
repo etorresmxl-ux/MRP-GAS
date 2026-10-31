@@ -14,18 +14,27 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------------
-# MENÚ LATERAL DE NAVEGACIÓN
+# MENÚ LATERAL DE NAVEGACIÓN (SLIM / SOLO ÍCONOS)
 # ---------------------------------------------------------
 with st.sidebar:
-    st.image("https://img.icons8.com/color/96/gas-station.png", width=80)
-    st.title("MRP Gas")
+    st.image("https://img.icons8.com/color/96/gas-station.png", width=50)
     
-    menu = option_menu(
-        menu_title="Menú Principal",
-        options=["Inventarios", "Proyecciones", "Ventas", "Importador"],
+    # Configuración de opción slim usando lista de opciones vacías
+    menu_index = option_menu(
+        menu_title=None,
+        options=["", "", "", ""],
         icons=["clipboard-data", "graph-up", "bar-chart", "upload"],
         default_index=0,
+        styles={
+            "container": {"padding": "0!important"},
+            "nav-link": {"justify-content": "center", "padding": "12px 0px", "font-size": "18px"},
+            "nav-link-selected": {"background-color": "#5B7470"},
+        }
     )
+
+    # Mapeo del índice devuelto por option_menu a la sección
+    secciones = ["Inventarios", "Proyecciones", "Ventas", "Importador"]
+    menu = secciones[menu_index]
 
 # ---------------------------------------------------------
 # CARGA GLOBAL AL INICIAR LA PÁGINA
