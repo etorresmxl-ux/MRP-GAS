@@ -91,7 +91,7 @@ def mostrar_inventarios():
         "id_estacion": st.column_config.TextColumn("ID", width="small", disabled=True),
         "nombre": st.column_config.TextColumn("Estación", width="medium", disabled=True),
         "plaza": st.column_config.TextColumn("Plaza", width="medium", disabled=True),
-        "Regular": st.column_config.TextColumn("Regular", width="small"),
+        "Regular": st.column_config.NumberColumn("Regular", width="small", format="%d"),
         "Premium": st.column_config.TextColumn("Premium", width="small"),
         "Diesel": st.column_config.TextColumn("Diesel", width="small")
     }
