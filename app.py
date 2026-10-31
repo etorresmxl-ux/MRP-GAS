@@ -33,26 +33,43 @@ st.markdown("""
         min-width: 260px !important;
     }
 
-    /* 3. Comportamiento de los textos: ocultos por defecto, visibles en hover */
+    /* 3. Ocultar completamente textos, títulos y contenedores por defecto */
     [data-testid="stSidebar"] .sidebar-text,
-    [data-testid="stSidebar"] span:not(.icon-fixed),
     [data-testid="stSidebar"] p,
-    [data-testid="stSidebar"] div[data-testid="stMarkdownContainer"] p,
-    [data-testid="stSidebar"] .nav-link-text {
+    [data-testid="stSidebar"] span:not(.icon-fixed),
+    [data-testid="stSidebar"] div[data-testid="stMarkdownContainer"] {
         opacity: 0;
-        transition: opacity 0.2s ease-in-out;
+        visibility: hidden;
+        transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
         white-space: nowrap;
         pointer-events: none;
     }
 
-    /* Revelar textos y elementos al hacer hover sobre la barra lateral */
+    /* Ocultar específicamente los textos internos de option_menu al estar colapsado */
+    [data-testid="stSidebar"] .nav-link {
+        justify-content: center !important;
+        padding: 12px 0px !important;
+    }
+    [data-testid="stSidebar"] .nav-link span {
+        display: none !important;
+    }
+
+    /* 4. Revelar elementos al hacer hover sobre la barra lateral */
     [data-testid="stSidebar"]:hover .sidebar-text,
-    [data-testid="stSidebar"]:hover span:not(.icon-fixed),
     [data-testid="stSidebar"]:hover p,
-    [data-testid="stSidebar"]:hover div[data-testid="stMarkdownContainer"] p,
-    [data-testid="stSidebar"]:hover .nav-link-text {
+    [data-testid="stSidebar"]:hover span:not(.icon-fixed),
+    [data-testid="stSidebar"]:hover div[data-testid="stMarkdownContainer"] {
         opacity: 1;
+        visibility: visible;
         pointer-events: auto;
+    }
+
+    [data-testid="stSidebar"]:hover .nav-link {
+        justify-content: flex-start !important;
+        padding: 10px 14px !important;
+    }
+    [data-testid="stSidebar"]:hover .nav-link span {
+        display: inline !important;
     }
 
     /* Contenedor interno con diseño flotante oscuro moderno */
@@ -97,7 +114,6 @@ with st.sidebar:
                 "margin": "4px 0px",
                 "color": "#9ca3af",
                 "border-radius": "10px",
-                "padding": "10px 12px",
                 "font-weight": "500",
             },
             "nav-link-selected": {
