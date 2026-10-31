@@ -110,7 +110,7 @@ def mostrar_proyecciones():
         else:
             color_Hex = "#424242"
 
-        st.markdown(f"<h3 style='color: {color_Hex};'>⛽ Producto: {producto}</h3>", unsafe_allow_html=True)
+        st.markdown(f"<h3 style='color: {color_Hex};'>⛽ {producto}</h3>", unsafe_allow_html=True)
 
         inv_inicial_hoy = 0.0
         if not df_inv_hoy.empty and "producto" in df_inv_hoy.columns:
@@ -177,7 +177,7 @@ def mostrar_proyecciones():
             "Concepto": st.column_config.TextColumn("Concepto", width="medium")
         }
         for col in [c for c in df_proyeccion.columns if c != "Concepto"]:
-            column_config[col] = st.column_config.TextColumn(col, width="small")
+            column_config[col] = st.column_config.NumberColumn(col, width="small", format="%d")
 
         st.dataframe(
             df_proyeccion,
