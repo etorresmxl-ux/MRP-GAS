@@ -92,8 +92,8 @@ def mostrar_inventarios():
         "nombre": st.column_config.TextColumn("Estación", width="medium", disabled=True),
         "plaza": st.column_config.TextColumn("Plaza", width="medium", disabled=True),
         "Regular": st.column_config.NumberColumn("Regular", width="small", format="%d"),
-        "Premium": st.column_config.TextColumn("Premium", width="small"),
-        "Diesel": st.column_config.TextColumn("Diesel", width="small")
+        "Premium": st.column_config.NumberColumn("Regular", width="small", format="%d"),
+        "Diesel": st.column_config.NumberColumn("Regular", width="small", format="%d")
     }
 
     st.dataframe(
