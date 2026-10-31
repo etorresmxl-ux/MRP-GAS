@@ -28,12 +28,12 @@ def estacion_tiene_producto(id_estacion, producto, df_tanques=None):
 def validar_matriz_productos(df_estaciones, df_resultado, productos=["Regular", "Premium", "Diesel"]):
     """
     Revisa tanques_estaciones: si un id_estacion no cuenta con un producto,
-    coloca 'N/A' en lugar de valores numéricos para bloquear su uso/escritura.
+    coloca None (celda vacía) en lugar de valores numéricos.
     """
     df_tanques = obtener_mapa_tanques()
     df_valido = df_resultado.copy()
     
-    # Asegurar que las columnas de productos admitan texto (tipo object) para evitar LossySetitemError
+    # Asegurar que las columnas de productos admitan objetos/nulos
     for prod in productos:
         if prod in df_valido.columns:
             df_valido[prod] = df_valido[prod].astype(object)
@@ -42,6 +42,6 @@ def validar_matriz_productos(df_estaciones, df_resultado, productos=["Regular", 
         id_est = row["id_estacion"]
         for prod in productos:
             if not estacion_tiene_producto(id_est, prod, df_tanques):
-                df_valido.loc[idx, prod] = "N/A"
+                df_valido.loc[idx, prod] = None  # <-- Aquí se asigna None para que aparezca vacía
                 
     return df_valido
