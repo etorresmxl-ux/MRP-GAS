@@ -177,7 +177,7 @@ def mostrar_proyecciones():
             "Concepto": st.column_config.TextColumn("Concepto", width="medium")
         }
         for col in [c for c in df_proyeccion.columns if c != "Concepto"]:
-            column_config[col] = st.column_config.NumberColumn(col, width="small", format="{:,}")
+            column_config[col] = st.column_config.NumberColumn(col, width="small", format=",%d")
 
         st.dataframe(
             df_proyeccion,
