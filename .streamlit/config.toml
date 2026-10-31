@@ -1,9 +1,10 @@
 [theme]
-primaryColor = "#209EBB" # Color primario utilizado en botones, enlaces, selecciones y sliders (Azul Turquesa)
-backgroundColor = "#023047" # Color de fondo principal de toda la aplicación (Azul Marino Profundo)
-secondaryBackgroundColor = "#122330" # Color de fondo para elementos secundarios como la barra lateral y tablas (Tono intermedio oscuro)
-textColor = "#8ECAE6" # Color principal del texto (Celeste claro para mantener alto contraste y legibilidad)
-font = "sans serif" # Fuente principal de la interfaz ("sans serif", "serif", "monospace")
+primaryColor = "#2E77AE" # Color primario utilizado en botones, enlaces, selecciones y sliders
+backgroundColor = "#0d2137" # Color de fondo principal de toda la aplicación
+secondaryBackgroundColor = "#162B46" # Color de fondo para elementos secundarios como la barra lateral y tablas
+textColor = "#E0EAF5" # Color principal del texto
+accentColor = "#FF8E2B" # Color de acento opcional
+font = "sans serif" # Fuente principal de la interfaz
 
 [ui]
 hideTopBar = false
